@@ -1,0 +1,6 @@
+[package]
+name = "rays"
+version = "0.1.0"
+authors = ["Michael Nye <thenyeguy@gmail.com>"]
+
+[dependencies]
