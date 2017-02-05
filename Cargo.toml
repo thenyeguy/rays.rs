@@ -5,3 +5,4 @@ authors = ["Michael Nye <thenyeguy@gmail.com>"]
 
 [dependencies]
 nalgebra = "0.10"
+num = "0.1"
