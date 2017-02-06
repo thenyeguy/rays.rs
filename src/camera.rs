@@ -22,8 +22,8 @@ impl Camera {
     }
 
     pub fn draw(&self,
-                surfaces: &Vec<Box<Surface>>,
-                lights: &Vec<Light>)
+                surfaces: &[Box<Surface>],
+                lights: &[Light])
                 -> RgbImage {
         ImageBuffer::from_fn(self.width as u32, self.height as u32, |i, j| {
             let x = i as f64 - (self.width / 2) as f64;
@@ -52,11 +52,11 @@ impl Camera {
     }
 }
 
-fn intersects(surfaces: &Vec<Box<Surface>>, ray: Ray) -> bool {
+fn intersects(surfaces: &[Box<Surface>], ray: Ray) -> bool {
     surfaces.iter().filter_map(|s| s.intersection(ray)).next().is_some()
 }
 
-fn find_closest_intersection(surfaces: &Vec<Box<Surface>>,
+fn find_closest_intersection(surfaces: &[Box<Surface>],
                              ray: Ray)
                              -> Option<Intersection> {
     let mut min_int = None;
