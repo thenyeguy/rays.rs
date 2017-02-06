@@ -1,6 +1,7 @@
 use image::{ImageBuffer, RgbImage, Rgb};
-use nalgebra::{Point3, Vector3};
+use nalgebra::{Dot, Point3, Vector3};
 
+use light::Light;
 use ray::Ray;
 use surface::{Intersection, Surface};
 
@@ -20,20 +21,30 @@ impl Camera {
         }
     }
 
-    pub fn draw(&self, surfaces: &Vec<Box<Surface>>) -> RgbImage {
+    pub fn draw(&self,
+                surfaces: &Vec<Box<Surface>>,
+                lights: &Vec<Light>)
+                -> RgbImage {
         ImageBuffer::from_fn(self.width as u32, self.height as u32, |i, j| {
             let x = i as f64 - (self.width / 2) as f64;
-            let y = j as f64 - (self.width / 2) as f64;
+            let y = j as f64 - (self.height / 2) as f64;
             let ray = Ray::new(Point3::new(x, y, 0.0), Vector3::z());
 
-            // Map to white for a hit, black for a miss
             match find_closest_intersection(surfaces, ray) {
-                Some((_, intersection)) => {
-                    let to_color = |f| (0.5 * f + 0.5) * 255.0;
-                    let red = to_color(intersection.normal.x);
-                    let green = to_color(intersection.normal.y);
-                    let blue = to_color(intersection.normal.z);
-                    Rgb([red as u8, green as u8, blue as u8])
+                Some(intersection) => {
+                    let mut brightness = 0.0;
+                    for light in lights {
+                        let light_ray = Ray::new(intersection.pos,
+                                                 light.pos - intersection.pos);
+                        if !intersects(surfaces, light_ray) {
+                            brightness += intersection.normal
+                                .dot(&light_ray.dir)
+                                .max(0.0);
+                        }
+                    }
+                    let to_color = |f| ((0.8 * f + 0.1) * 255.0) as u8;
+                    let pixel = to_color(brightness);
+                    Rgb([pixel, pixel, pixel])
                 }
                 None => Rgb([0, 0, 0]),
             }
@@ -41,23 +52,22 @@ impl Camera {
     }
 }
 
+fn intersects(surfaces: &Vec<Box<Surface>>, ray: Ray) -> bool {
+    surfaces.iter().filter_map(|s| s.intersection(ray)).next().is_some()
+}
+
 fn find_closest_intersection(surfaces: &Vec<Box<Surface>>,
                              ray: Ray)
-                             -> Option<(usize, Intersection)> {
+                             -> Option<Intersection> {
     let mut min_int = None;
-    for (i, surface) in surfaces.iter().enumerate() {
-        match surface.intersection(ray) {
-            Some(int) => {
-                match min_int {
-                    None => min_int = Some((i, int)),
-                    Some((_, int2)) => {
-                        if int.distance < int2.distance {
-                            min_int = Some((i, int))
-                        }
-                    }
+    for int in surfaces.iter().filter_map(|s| s.intersection(ray)) {
+        match min_int {
+            None => min_int = Some(int),
+            Some(int2) => {
+                if int.distance < int2.distance {
+                    min_int = Some(int)
                 }
             }
-            None => (),
         }
     }
     min_int

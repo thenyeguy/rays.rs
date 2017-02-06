@@ -5,7 +5,7 @@ use ray::Ray;
 #[derive(Copy,Clone,Debug)]
 pub struct Intersection {
     pub distance: f64,
-    pub position: Point3<f64>,
+    pub pos: Point3<f64>,
     pub normal: Vector3<f64>,
 }
 
@@ -43,11 +43,15 @@ impl Surface for Sphere {
             None
         } else {
             let distance = (-b - dis.sqrt()) / 2.0;
-            let position = ray.along(distance);
+            // Distance threshold to prevent self-intersection
+            if distance <= 0.00001 {
+                return None;
+            }
+            let pos = ray.along(distance);
             Some(Intersection {
                 distance: distance,
-                position: position,
-                normal: (position - self.center).normalize(),
+                pos: pos,
+                normal: (pos - self.center).normalize(),
             })
         }
     }
