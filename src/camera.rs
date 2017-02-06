@@ -28,7 +28,13 @@ impl Camera {
 
             // Map to white for a hit, black for a miss
             match find_closest_intersection(surfaces, ray) {
-                Some(_) => Rgb([255, 255, 255]),
+                Some((_, intersection)) => {
+                    let to_color = |f| (0.5 * f + 0.5) * 255.0;
+                    let red = to_color(intersection.normal.x);
+                    let green = to_color(intersection.normal.y);
+                    let blue = to_color(intersection.normal.z);
+                    Rgb([red as u8, green as u8, blue as u8])
+                }
                 None => Rgb([0, 0, 0]),
             }
         })

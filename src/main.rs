@@ -28,10 +28,11 @@ fn draw_console(img: &RgbImage, sample_rate: u32) {
 #[cfg(not(test))]
 fn main() {
     let surfaces: Vec<Box<Surface>> = vec![
-        Box::new(Sphere::new(Point3::new(0.0, 0.0, 100.0), 5.0)),
+        Box::new(Sphere::new(Point3::new(0.0, 0.0, 100.0), 100.0)),
     ];
 
-    let camera = Camera::new(25, 25);
+    let camera = Camera::new(500, 500);
     let img = camera.draw(&surfaces);
-    draw_console(&img, 1);
+    draw_console(&img, 20);
+    img.save("images/test.png").unwrap();
 }
