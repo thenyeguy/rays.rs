@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Michael Nye <thenyeguy@gmail.com>"]
 
 [dependencies]
+clap = "2.20"
 image = "0.12"
 nalgebra = "0.10"
 num = "0.1"
