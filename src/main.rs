@@ -7,7 +7,8 @@ fn main() {
     use nalgebra::Point3;
     use rays::camera::Camera;
     use rays::light::Light;
-    use rays::surface::{Surface, Sphere};
+    use rays::scene::Scene;
+    use rays::surface::Sphere;
     use std::error::Error;
     use std::time::Instant;
 
@@ -23,14 +24,17 @@ fn main() {
             .takes_value(true))
         .get_matches();
 
-    let surfaces: &[Box<Surface>] =
-        &[Box::new(Sphere::new(Point3::new(0.0, 0.0, 1000.0), 200.0)),
-          Box::new(Sphere::new(Point3::new(300.0, 0.0, 700.0), 100.0))];
-    let lights = &[Light::new(Point3::new(1000.0, 0.0, 0.0))];
+    let scene = Scene {
+        surfaces: vec![Box::new(Sphere::new(Point3::new(0.0, 0.0, 1000.0),
+                                            200.0)),
+                       Box::new(Sphere::new(Point3::new(300.0, 0.0, 700.0),
+                                            100.0))],
+        lights: vec![Light::new(Point3::new(1000.0, 0.0, 0.0))],
+    };
 
     let now = Instant::now();
     let camera = Camera::new(1000, 1000);
-    let img = camera.draw(surfaces, lights);
+    let img = camera.draw(&scene);
     println!("Rendering took {} seconds", now.elapsed().as_secs());
 
     let output = matches.value_of("output").unwrap_or("images/test.png");

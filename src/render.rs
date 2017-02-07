@@ -1,34 +1,30 @@
 use nalgebra::{Dot, Point3, Vector3};
 
-use light::Light;
 use ray::Ray;
+use scene::Scene;
 use surface::{Intersection, Surface};
 
 const OVERSAMPLES: [f64; 5] = [-0.4, -0.2, 0.0, 0.2, 0.4];
 
-pub fn render_pixel(surfaces: &[Box<Surface>],
-                    lights: &[Light],
-                    x: f64,
-                    y: f64)
-                    -> f64 {
+pub fn render_pixel(scene: &Scene, x: f64, y: f64) -> f64 {
     let mut brightness = 0.0;
     for dx in &OVERSAMPLES {
         for dy in &OVERSAMPLES {
             let ray = Ray::new(Point3::new(x + dx, y + dy, 0.0), Vector3::z());
-            brightness += render_ray(surfaces, lights, ray);
+            brightness += render_ray(scene, ray);
         }
     }
     brightness / (OVERSAMPLES.len() * OVERSAMPLES.len()) as f64
 }
 
-fn render_ray(surfaces: &[Box<Surface>], lights: &[Light], ray: Ray) -> f64 {
-    match find_closest_intersection(surfaces, ray) {
+fn render_ray(scene: &Scene, ray: Ray) -> f64 {
+    match find_closest_intersection(&scene.surfaces, ray) {
         Some(intersection) => {
             let mut brightness = 0.0;
-            for light in lights {
+            for light in &scene.lights {
                 let light_ray = Ray::new(intersection.pos,
                                          light.pos - intersection.pos);
-                if !intersects(surfaces, light_ray) {
+                if !intersects(&scene.surfaces, light_ray) {
                     brightness += intersection.normal
                         .dot(&light_ray.dir)
                         .max(0.0);

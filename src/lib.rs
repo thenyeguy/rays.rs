@@ -6,4 +6,5 @@ pub mod camera;
 pub mod light;
 pub mod ray;
 mod render;
+pub mod scene;
 pub mod surface;

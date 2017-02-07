@@ -1,7 +1,6 @@
 use image::{ImageBuffer, RgbImage, Rgb};
 
-use light::Light;
-use surface::Surface;
+use scene::Scene;
 use render::render_pixel;
 
 #[derive(Copy, Clone, Debug)]
@@ -20,15 +19,12 @@ impl Camera {
         }
     }
 
-    pub fn draw(&self,
-                surfaces: &[Box<Surface>],
-                lights: &[Light])
-                -> RgbImage {
+    pub fn draw(&self, scene: &Scene) -> RgbImage {
         ImageBuffer::from_fn(self.width as u32, self.height as u32, |i, j| {
             let x = i as f64 - (self.width / 2) as f64;
             let y = j as f64 - (self.height / 2) as f64;
 
-            let brightness = render_pixel(surfaces, lights, x, y);
+            let brightness = render_pixel(scene, x, y);
             let to_color = |f| ((0.8 * f + 0.1) * 255.0) as u8;
             let pixel = to_color(brightness);
             Rgb([pixel, pixel, pixel])
