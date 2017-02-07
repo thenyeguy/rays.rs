@@ -35,11 +35,14 @@ fn main() {
     let now = Instant::now();
     let camera = Camera::new(1000, 1000);
     let img = camera.draw(&scene);
-    println!("Rendering took {} seconds", now.elapsed().as_secs());
+    println!("Rendering took {} seconds.", now.elapsed().as_secs());
 
-    let output = matches.value_of("output").unwrap_or("images/test.png");
-    if let Err(e) = img.save(output) {
-        println!("Could not write file: {}", e.description());
-        std::process::exit(1);
+    let out_file = matches.value_of("output").unwrap_or("images/test.png");
+    match img.save(out_file) {
+        Ok(()) => println!("Wrote final image to {}", out_file),
+        Err(e) => {
+            println!("Could not write file: {}", e.description());
+            std::process::exit(1);
+        }
     }
 }
