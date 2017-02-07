@@ -1,9 +1,8 @@
 use image::{ImageBuffer, RgbImage, Rgb};
-use nalgebra::{Dot, Point3, Vector3};
 
 use light::Light;
-use ray::Ray;
-use surface::{Intersection, Surface};
+use surface::Surface;
+use render::render_pixel;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Camera {
@@ -28,47 +27,11 @@ impl Camera {
         ImageBuffer::from_fn(self.width as u32, self.height as u32, |i, j| {
             let x = i as f64 - (self.width / 2) as f64;
             let y = j as f64 - (self.height / 2) as f64;
-            let ray = Ray::new(Point3::new(x, y, 0.0), Vector3::z());
 
-            match find_closest_intersection(surfaces, ray) {
-                Some(intersection) => {
-                    let mut brightness = 0.0;
-                    for light in lights {
-                        let light_ray = Ray::new(intersection.pos,
-                                                 light.pos - intersection.pos);
-                        if !intersects(surfaces, light_ray) {
-                            brightness += intersection.normal
-                                .dot(&light_ray.dir)
-                                .max(0.0);
-                        }
-                    }
-                    let to_color = |f| ((0.8 * f + 0.1) * 255.0) as u8;
-                    let pixel = to_color(brightness);
-                    Rgb([pixel, pixel, pixel])
-                }
-                None => Rgb([0, 0, 0]),
-            }
+            let brightness = render_pixel(surfaces, lights, x, y);
+            let to_color = |f| ((0.8 * f + 0.1) * 255.0) as u8;
+            let pixel = to_color(brightness);
+            Rgb([pixel, pixel, pixel])
         })
     }
-}
-
-fn intersects(surfaces: &[Box<Surface>], ray: Ray) -> bool {
-    surfaces.iter().filter_map(|s| s.intersection(ray)).next().is_some()
-}
-
-fn find_closest_intersection(surfaces: &[Box<Surface>],
-                             ray: Ray)
-                             -> Option<Intersection> {
-    let mut min_int = None;
-    for int in surfaces.iter().filter_map(|s| s.intersection(ray)) {
-        match min_int {
-            None => min_int = Some(int),
-            Some(int2) => {
-                if int.distance < int2.distance {
-                    min_int = Some(int)
-                }
-            }
-        }
-    }
-    min_int
 }

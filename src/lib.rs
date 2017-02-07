@@ -5,4 +5,5 @@ extern crate num;
 pub mod camera;
 pub mod light;
 pub mod ray;
+mod render;
 pub mod surface;

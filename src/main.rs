@@ -9,6 +9,7 @@ fn main() {
     use rays::light::Light;
     use rays::surface::{Surface, Sphere};
     use std::error::Error;
+    use std::time::Instant;
 
     let matches = clap::App::new("rays")
         .version("0.1")
@@ -23,12 +24,14 @@ fn main() {
         .get_matches();
 
     let surfaces: &[Box<Surface>] =
-        &[Box::new(Sphere::new(Point3::new(0.0, 0.0, 500.0), 100.0)),
-          Box::new(Sphere::new(Point3::new(150.0, 0.0, 350.0), 50.0))];
-    let lights = &[Light::new(Point3::new(500.0, 0.0, 0.0))];
+        &[Box::new(Sphere::new(Point3::new(0.0, 0.0, 1000.0), 200.0)),
+          Box::new(Sphere::new(Point3::new(300.0, 0.0, 700.0), 100.0))];
+    let lights = &[Light::new(Point3::new(1000.0, 0.0, 0.0))];
 
-    let camera = Camera::new(500, 500);
+    let now = Instant::now();
+    let camera = Camera::new(1000, 1000);
     let img = camera.draw(surfaces, lights);
+    println!("Rendering took {} seconds", now.elapsed().as_secs());
 
     let output = matches.value_of("output").unwrap_or("images/test.png");
     if let Err(e) = img.save(output) {
