@@ -5,11 +5,11 @@ extern crate nalgebra;
 extern crate rays;
 
 fn main() {
-    use nalgebra::Point3;
+    use nalgebra::{Vector3, Point3};
     use rays::camera::Camera;
     use rays::light::Light;
     use rays::scene::Scene;
-    use rays::surface::Sphere;
+    use rays::surface::{Plane, Sphere};
     use std::error::Error;
     use std::time::Instant;
 
@@ -29,9 +29,11 @@ fn main() {
     let fov = value_t!(matches, "fov", u32).unwrap_or(45);
 
     let scene = Scene {
-        surfaces: vec![Box::new(Sphere::new(Point3::new(0.0, 0.0, 10.0), 2.0)),
-                       Box::new(Sphere::new(Point3::new(3.0, 0.0, 7.0), 1.0))],
-        lights: vec![Light::new(Point3::new(10.0, 0.0, 0.0))],
+        surfaces: vec![Box::new(Sphere::new(Point3::new(0.0, 0.0, 20.0), 2.0)),
+                       Box::new(Sphere::new(Point3::new(3.0, 1.0, 15.0), 1.0)),
+                       Box::new(Plane::new(Point3::new(0.0, 2.0, 0.0),
+                                           Vector3::new(0.0, 1.0, 0.0)))],
+        lights: vec![Light::new(Point3::new(10.0, -1.0, 0.0))],
     };
 
     let now = Instant::now();

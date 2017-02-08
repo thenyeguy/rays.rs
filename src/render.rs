@@ -1,4 +1,4 @@
-use nalgebra::Dot;
+use nalgebra::{Dot, Norm};
 
 use ray::Ray;
 use scene::Scene;
@@ -11,7 +11,8 @@ pub fn render_ray(scene: &Scene, ray: Ray) -> f64 {
             for light in &scene.lights {
                 let light_ray = Ray::new(intersection.pos,
                                          light.pos - intersection.pos);
-                if !intersects(&scene.surfaces, light_ray) {
+                let max_distance = (light.pos - intersection.pos).norm();
+                if !occluded(&scene.surfaces, light_ray, max_distance) {
                     brightness += intersection.normal
                         .dot(&light_ray.dir)
                         .max(0.0);
@@ -24,8 +25,12 @@ pub fn render_ray(scene: &Scene, ray: Ray) -> f64 {
 }
 
 
-fn intersects(surfaces: &[Box<Surface>], ray: Ray) -> bool {
-    surfaces.iter().filter_map(|s| s.intersection(ray)).next().is_some()
+fn occluded(surfaces: &[Box<Surface>], ray: Ray, max_distance: f64) -> bool {
+    surfaces.iter()
+        .filter_map(|s| s.intersection(ray))
+        .filter(|i| i.distance < max_distance)
+        .next()
+        .is_some()
 }
 
 fn find_closest_intersection(surfaces: &[Box<Surface>],
