@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate clap;
 extern crate image;
 extern crate nalgebra;
@@ -12,17 +13,20 @@ fn main() {
     use std::error::Error;
     use std::time::Instant;
 
-    let matches = clap::App::new("rays")
-        .version("0.1")
-        .about("Ray Tracer in Rust")
-        .author("Michael Nye")
-        .arg(clap::Arg::with_name("output")
-            .short("o")
-            .long("output")
-            .value_name("FILE")
-            .help("Image file to write rendered result to.")
-            .takes_value(true))
+    let matches = clap_app!(rays =>
+        (version: "0.1")
+        (author: "Michael Nye <thenyeguy@gmail.com>")
+        (about: "Ray tracer in Rust")
+        (@arg output: -o --output +takes_value "image file to render into")
+        (@arg width: -w --width +takes_value "image width (pixels)")
+        (@arg height: -h --height +takes_value "image height (pixels)")
+        (@arg fov: --fov +takes_value "field of view (degrees)")
+    )
         .get_matches();
+    let output = matches.value_of("output").unwrap_or("images/test.png");
+    let width = value_t!(matches, "width", u32).unwrap_or(1000);
+    let height = value_t!(matches, "height", u32).unwrap_or(1000);
+    let fov = value_t!(matches, "fov", u32).unwrap_or(45);
 
     let scene = Scene {
         surfaces: vec![Box::new(Sphere::new(Point3::new(0.0, 0.0, 1000.0),
@@ -33,13 +37,12 @@ fn main() {
     };
 
     let now = Instant::now();
-    let camera = Camera::new(1920, 1080, 100);
+    let camera = Camera::new(width, height, fov);
     let img = camera.draw(&scene);
     println!("Rendering took {} seconds.", now.elapsed().as_secs());
 
-    let out_file = matches.value_of("output").unwrap_or("images/test.png");
-    match img.save(out_file) {
-        Ok(()) => println!("Wrote final image to {}", out_file),
+    match img.save(output) {
+        Ok(()) => println!("Wrote final image to {}", output),
         Err(e) => {
             println!("Could not write file: {}", e.description());
             std::process::exit(1);
