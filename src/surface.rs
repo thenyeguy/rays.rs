@@ -32,8 +32,8 @@ impl Sphere {
 impl Surface for Sphere {
     fn intersection(&self, ray: Ray) -> Option<Intersection> {
         // Find the discriminant
-        let b = (ray.pos - self.center).dot(&ray.dir) * 2.0;
-        let c = (ray.pos - self.center).norm_squared() -
+        let b = (ray.origin - self.center).dot(&ray.dir) * 2.0;
+        let c = (ray.origin - self.center).norm_squared() -
                 self.radius * self.radius;
         let dis = b * b - 4.0 * c;
 
