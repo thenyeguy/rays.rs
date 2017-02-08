@@ -29,11 +29,9 @@ fn main() {
     let fov = value_t!(matches, "fov", u32).unwrap_or(45);
 
     let scene = Scene {
-        surfaces: vec![Box::new(Sphere::new(Point3::new(0.0, 0.0, 1000.0),
-                                            200.0)),
-                       Box::new(Sphere::new(Point3::new(300.0, 0.0, 700.0),
-                                            100.0))],
-        lights: vec![Light::new(Point3::new(1000.0, 0.0, 0.0))],
+        surfaces: vec![Box::new(Sphere::new(Point3::new(0.0, 0.0, 10.0), 2.0)),
+                       Box::new(Sphere::new(Point3::new(3.0, 0.0, 7.0), 1.0))],
+        lights: vec![Light::new(Point3::new(10.0, 0.0, 0.0))],
     };
 
     let now = Instant::now();
