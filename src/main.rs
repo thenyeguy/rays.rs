@@ -33,7 +33,7 @@ fn main() {
     };
 
     let now = Instant::now();
-    let camera = Camera::new(1000, 1000);
+    let camera = Camera::new(1920, 1080, 100);
     let img = camera.draw(&scene);
     println!("Rendering took {} seconds.", now.elapsed().as_secs());
 
