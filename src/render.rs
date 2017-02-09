@@ -1,10 +1,11 @@
 use nalgebra::{Dot, Norm};
+use palette::Rgb;
 
 use ray::Ray;
 use scene::Scene;
 use surface::{Intersection, Surface};
 
-pub fn render_ray(scene: &Scene, ray: Ray) -> f64 {
+pub fn render_ray(scene: &Scene, ray: Ray) -> Rgb {
     match find_closest_intersection(&scene.surfaces, ray) {
         Some(intersection) => {
             let mut brightness = 0.0;
@@ -18,9 +19,10 @@ pub fn render_ray(scene: &Scene, ray: Ray) -> f64 {
                         .max(0.0);
                 }
             }
-            brightness
+            let value = brightness as f32;
+            Rgb::new(value, value, value)
         }
-        _ => 0.0,
+        _ => Rgb::new(0.0, 0.0, 0.0),
     }
 }
 

@@ -1,5 +1,6 @@
-use image::{ImageBuffer, RgbImage, Rgb};
+use image::{self, ImageBuffer, RgbImage};
 use nalgebra::{Origin, Point3, Vector3};
+use palette;
 use std::f64;
 
 use scene::Scene;
@@ -38,17 +39,24 @@ impl Camera {
         ImageBuffer::from_fn(self.width as u32, self.height as u32, |i, j| {
             let x = i as f64 - (self.width / 2) as f64;
             let y = j as f64 - (self.height / 2) as f64;
-            let mut brightness = 0.0;
+            let mut color = palette::Rgb::new(0.0, 0.0, 0.0);
             for dx in &oversample_deltas {
                 for dy in &oversample_deltas {
                     let ray = Ray::new(self.pos,
                                        Vector3::new(x + dx, y + dy, self.z));
-                    brightness += render_ray(scene, ray);
+                    color = color + render_ray(scene, ray);
                 }
             }
-            brightness /= num_oversamples as f64;
-            let pixel = ((0.8 * brightness + 0.1) * 255.0) as u8;
-            Rgb([pixel, pixel, pixel])
+            let pixel = palette::pixel::Srgb::from(color /
+                                                   num_oversamples as f32);
+            image::Rgb([to_u8(pixel.red),
+                        to_u8(pixel.green),
+                        to_u8(pixel.blue)])
         })
     }
+}
+
+#[inline]
+fn to_u8(value: f32) -> u8 {
+    (value * 255.0) as u8
 }
