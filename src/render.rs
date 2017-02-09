@@ -5,16 +5,15 @@ use ray::Ray;
 use scene::Scene;
 use surface::{Intersection, Surface};
 
-pub fn render_ray(scene: &Scene, ray: Ray) -> Rgb {
-    match find_closest_intersection(&scene.surfaces, ray) {
-        Some(intersection) => {
+pub fn trace(scene: &Scene, ray: Ray) -> Rgb {
+    match closest_hit(&scene.surfaces, ray) {
+        Some(hit) => {
             let mut brightness = 0.0;
             for light in &scene.lights {
-                let light_ray = Ray::new(intersection.pos,
-                                         light.pos - intersection.pos);
-                let max_distance = (light.pos - intersection.pos).norm();
+                let light_ray = Ray::new(hit.pos, light.pos - hit.pos);
+                let max_distance = (light.pos - hit.pos).norm();
                 if !occluded(&scene.surfaces, light_ray, max_distance) {
-                    brightness += intersection.normal
+                    brightness += hit.normal
                         .dot(&light_ray.dir)
                         .max(0.0);
                 }
@@ -26,7 +25,6 @@ pub fn render_ray(scene: &Scene, ray: Ray) -> Rgb {
     }
 }
 
-
 fn occluded(surfaces: &[Box<Surface>], ray: Ray, max_distance: f64) -> bool {
     surfaces.iter()
         .filter_map(|s| s.intersection(ray))
@@ -35,19 +33,10 @@ fn occluded(surfaces: &[Box<Surface>], ray: Ray, max_distance: f64) -> bool {
         .is_some()
 }
 
-fn find_closest_intersection(surfaces: &[Box<Surface>],
-                             ray: Ray)
-                             -> Option<Intersection> {
-    let mut min_int = None;
-    for int in surfaces.iter().filter_map(|s| s.intersection(ray)) {
-        match min_int {
-            None => min_int = Some(int),
-            Some(int2) => {
-                if int.distance < int2.distance {
-                    min_int = Some(int)
-                }
-            }
-        }
-    }
-    min_int
+fn closest_hit(surfaces: &[Box<Surface>], ray: Ray) -> Option<Intersection> {
+    surfaces.iter()
+        .filter_map(|s| s.intersection(ray))
+        .min_by(|left, right| {
+            left.distance.partial_cmp(&right.distance).unwrap()
+        })
 }

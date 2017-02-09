@@ -5,7 +5,7 @@ use std::f64;
 
 use scene::Scene;
 use ray::Ray;
-use render::render_ray;
+use render::trace;
 
 const OVERSAMPLE_FACTOR: isize = 3;
 
@@ -44,7 +44,7 @@ impl Camera {
                 for dy in &oversample_deltas {
                     let ray = Ray::new(self.pos,
                                        Vector3::new(x + dx, y + dy, self.z));
-                    color = color + render_ray(scene, ray);
+                    color = color + trace(scene, ray);
                 }
             }
             let pixel = palette::pixel::Srgb::from(color /
