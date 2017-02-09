@@ -1,7 +1,7 @@
 use image::{self, ImageBuffer, RgbImage};
 use nalgebra::{Origin, Point3, Vector3};
 use palette;
-use std::f64;
+use std::f32;
 
 use scene::Scene;
 use ray::Ray;
@@ -13,8 +13,8 @@ const OVERSAMPLE_FACTOR: isize = 3;
 pub struct Camera {
     pub width: u32,
     pub height: u32,
-    pos: Point3<f64>,
-    z: f64,
+    pos: Point3<f32>,
+    z: f32,
 }
 
 impl Camera {
@@ -24,21 +24,21 @@ impl Camera {
             width: width,
             height: height,
             pos: Point3::origin(),
-            z: (width as f64 / 2.0) /
-               (fov as f64 * f64::consts::PI / 180.0 / 2.0).tan(),
+            z: (width as f32 / 2.0) /
+               (fov as f32 * f32::consts::PI / 180.0 / 2.0).tan(),
         }
     }
 
     pub fn draw(&self, scene: &Scene) -> RgbImage {
         let oversample_deltas: Vec<_> = (0..OVERSAMPLE_FACTOR)
             .map(|i| {
-                (i - OVERSAMPLE_FACTOR / 2) as f64 / OVERSAMPLE_FACTOR as f64
+                (i - OVERSAMPLE_FACTOR / 2) as f32 / OVERSAMPLE_FACTOR as f32
             })
             .collect();
         let num_oversamples = OVERSAMPLE_FACTOR * OVERSAMPLE_FACTOR;
         ImageBuffer::from_fn(self.width as u32, self.height as u32, |i, j| {
-            let x = i as f64 - (self.width / 2) as f64;
-            let y = j as f64 - (self.height / 2) as f64;
+            let x = i as f32 - (self.width / 2) as f32;
+            let y = j as f32 - (self.height / 2) as f32;
             let mut color = palette::Rgb::new(0.0, 0.0, 0.0);
             for dx in &oversample_deltas {
                 for dy in &oversample_deltas {

@@ -17,7 +17,7 @@ pub fn trace(scene: &Scene, ray: Ray) -> Rgb {
                         .dot(&light_ray.dir)
                         .max(0.0);
                     color = color +
-                            hit.material.color * light.color * intensity as f32;
+                            hit.material.color * light.color * intensity;
                 }
             }
             color
@@ -26,7 +26,7 @@ pub fn trace(scene: &Scene, ray: Ray) -> Rgb {
     }
 }
 
-fn occluded(surfaces: &[Box<Surface>], ray: Ray, max_distance: f64) -> bool {
+fn occluded(surfaces: &[Box<Surface>], ray: Ray, max_distance: f32) -> bool {
     surfaces.iter()
         .filter_map(|s| s.intersection(ray))
         .filter(|i| i.distance < max_distance)

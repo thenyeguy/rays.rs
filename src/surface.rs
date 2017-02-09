@@ -3,13 +3,13 @@ use nalgebra::{Dot, Norm, Point3, Vector3};
 use material::Material;
 use ray::Ray;
 
-const EPSILON: f64 = 0.00001;
+const EPSILON: f32 = 0.00001;
 
 #[derive(Copy,Clone,Debug)]
 pub struct Intersection<'a> {
-    pub distance: f64,
-    pub pos: Point3<f64>,
-    pub normal: Vector3<f64>,
+    pub distance: f32,
+    pub pos: Point3<f32>,
+    pub normal: Vector3<f32>,
     pub material: &'a Material,
 }
 
@@ -19,14 +19,14 @@ pub trait Surface {
 
 
 pub struct Plane {
-    point: Point3<f64>,
-    normal: Vector3<f64>,
+    point: Point3<f32>,
+    normal: Vector3<f32>,
     material: Material,
 }
 
 impl Plane {
-    pub fn new(point: Point3<f64>,
-               normal: Vector3<f64>,
+    pub fn new(point: Point3<f32>,
+               normal: Vector3<f32>,
                material: Material)
                -> Self {
         Plane {
@@ -63,13 +63,13 @@ impl Surface for Plane {
 
 
 pub struct Sphere {
-    center: Point3<f64>,
-    radius: f64,
+    center: Point3<f32>,
+    radius: f32,
     material: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Point3<f64>, radius: f64, material: Material) -> Self {
+    pub fn new(center: Point3<f32>, radius: f32, material: Material) -> Self {
         Sphere {
             center: center,
             radius: radius,
