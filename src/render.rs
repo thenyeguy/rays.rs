@@ -8,18 +8,18 @@ use surface::{Intersection, Surface};
 pub fn trace(scene: &Scene, ray: Ray) -> Rgb {
     match closest_hit(&scene.surfaces, ray) {
         Some(hit) => {
-            let mut brightness = 0.0;
+            let mut color = Rgb::new(0.0, 0.0, 0.0);
             for light in &scene.lights {
                 let light_ray = Ray::new(hit.pos, light.pos - hit.pos);
                 let max_distance = (light.pos - hit.pos).norm();
                 if !occluded(&scene.surfaces, light_ray, max_distance) {
-                    brightness += hit.normal
+                    let intensity = hit.normal
                         .dot(&light_ray.dir)
                         .max(0.0);
+                    color = color + light.color * intensity as f32;
                 }
             }
-            let value = brightness as f32;
-            Rgb::new(value, value, value)
+            color
         }
         _ => Rgb::new(0.0, 0.0, 0.0),
     }

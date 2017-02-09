@@ -2,10 +2,12 @@
 extern crate clap;
 extern crate image;
 extern crate nalgebra;
+extern crate palette;
 extern crate rays;
 
 fn main() {
     use nalgebra::{Vector3, Point3};
+    use palette::Rgb;
     use rays::camera::Camera;
     use rays::light::Light;
     use rays::scene::Scene;
@@ -33,7 +35,8 @@ fn main() {
                        Box::new(Sphere::new(Point3::new(3.0, 1.0, 15.0), 1.0)),
                        Box::new(Plane::new(Point3::new(0.0, 2.0, 0.0),
                                            Vector3::new(0.0, 1.0, 0.0)))],
-        lights: vec![Light::new(Point3::new(10.0, -1.0, 0.0))],
+        lights: vec![Light::new(Point3::new(10.0, -1.0, 0.0),
+                                Rgb::new(1.0, 0.7, 0.2))],
     };
 
     let now = Instant::now();
