@@ -1,14 +1,16 @@
 use nalgebra::{Dot, Norm, Point3, Vector3};
 
+use material::Material;
 use ray::Ray;
 
 const EPSILON: f64 = 0.00001;
 
 #[derive(Copy,Clone,Debug)]
-pub struct Intersection {
+pub struct Intersection<'a> {
     pub distance: f64,
     pub pos: Point3<f64>,
     pub normal: Vector3<f64>,
+    pub material: &'a Material,
 }
 
 pub trait Surface {
@@ -16,17 +18,21 @@ pub trait Surface {
 }
 
 
-#[derive(Copy,Clone,Debug)]
 pub struct Plane {
-    pub point: Point3<f64>,
-    pub normal: Vector3<f64>,
+    point: Point3<f64>,
+    normal: Vector3<f64>,
+    material: Material,
 }
 
 impl Plane {
-    pub fn new(point: Point3<f64>, normal: Vector3<f64>) -> Self {
+    pub fn new(point: Point3<f64>,
+               normal: Vector3<f64>,
+               material: Material)
+               -> Self {
         Plane {
             point: point,
             normal: normal.normalize(),
+            material: material,
         }
     }
 }
@@ -44,24 +50,30 @@ impl Surface for Plane {
             Some(Intersection {
                 distance: distance,
                 pos: ray.along(distance),
-                normal: if denom < 0.0 { self.normal } else { -self.normal },
+                normal: if denom < 0.0 {
+                    self.normal
+                } else {
+                    -self.normal
+                },
+                material: &self.material,
             })
         }
     }
 }
 
 
-#[derive(Copy,Clone,Debug)]
 pub struct Sphere {
-    pub center: Point3<f64>,
-    pub radius: f64,
+    center: Point3<f64>,
+    radius: f64,
+    material: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Point3<f64>, radius: f64) -> Self {
+    pub fn new(center: Point3<f64>, radius: f64, material: Material) -> Self {
         Sphere {
             center: center,
             radius: radius,
+            material: material,
         }
     }
 }
@@ -89,42 +101,8 @@ impl Surface for Sphere {
                 distance: distance,
                 pos: pos,
                 normal: (pos - self.center).normalize(),
+                material: &self.material,
             })
         }
-    }
-}
-
-
-#[cfg(test)]
-mod tests {
-    use nalgebra::{approx_eq, Point3, Vector3};
-    use num::Float;
-    use super::*;
-    use ray::Ray;
-
-    #[test]
-    fn test_sphere_hits() {
-        let sphere = Sphere::new(Point3::new(1.0, 1.0, 1.0), 1.0);
-        let ray = Ray::new(Point3::new(0.0, 0.0, 0.0),
-                           Vector3::new(1.0, 1.0, 1.0));
-        let intersection = sphere.intersection(ray).expect("no intersection");
-        assert!(approx_eq(&intersection.distance, &(3.0.sqrt() - 1.0)));
-    }
-
-    #[test]
-    fn test_sphere_tangent() {
-        let sphere = Sphere::new(Point3::new(1.0, 0.0, 1.0), 1.0);
-        let ray = Ray::new(Point3::new(0.0, 0.0, 0.0),
-                           Vector3::new(1.0, 0.0, 0.0));
-        let intersection = sphere.intersection(ray).expect("no intersection");
-        assert!(approx_eq(&intersection.distance, &1.0));
-    }
-
-    #[test]
-    fn test_sphere_misses() {
-        let sphere = Sphere::new(Point3::new(1.0, 1.0, 1.0), 1.0);
-        let ray = Ray::new(Point3::new(0.0, 0.0, 0.0),
-                           Vector3::new(-1.0, 1.0, 1.0));
-        assert!(sphere.intersection(ray).is_none());
     }
 }

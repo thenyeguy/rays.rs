@@ -10,6 +10,7 @@ fn main() {
     use palette::Rgb;
     use rays::camera::Camera;
     use rays::light::Light;
+    use rays::material::Material;
     use rays::scene::Scene;
     use rays::surface::{Plane, Sphere};
     use std::error::Error;
@@ -30,13 +31,22 @@ fn main() {
     let fov = value_t!(matches, "fov", u32).unwrap_or(45);
     let output = matches.value_of("output").unwrap();
 
+    let white = Rgb::new(1.0, 1.0, 1.0);
+    let red = Rgb::new(1.0, 0.0, 0.0);
+    let blue = Rgb::new(0.1, 0.1, 1.0);
+    let yellow = Rgb::new(1.0, 0.9, 0.4);
+
     let scene = Scene {
-        surfaces: vec![Box::new(Sphere::new(Point3::new(0.0, 0.0, 20.0), 2.0)),
-                       Box::new(Sphere::new(Point3::new(3.0, 1.0, 15.0), 1.0)),
+        surfaces: vec![Box::new(Sphere::new(Point3::new(0.0, 0.0, 20.0),
+                                            2.0,
+                                            Material::new(red))),
+                       Box::new(Sphere::new(Point3::new(3.0, 1.0, 15.0),
+                                            1.0,
+                                            Material::new(blue))),
                        Box::new(Plane::new(Point3::new(0.0, 2.0, 0.0),
-                                           Vector3::new(0.0, 1.0, 0.0)))],
-        lights: vec![Light::new(Point3::new(10.0, -1.0, 0.0),
-                                Rgb::new(1.0, 0.7, 0.2))],
+                                           Vector3::new(0.0, 1.0, 0.0),
+                                           Material::new(white)))],
+        lights: vec![Light::new(Point3::new(10.0, -1.0, 0.0), yellow)],
     };
 
     let now = Instant::now();

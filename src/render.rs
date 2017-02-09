@@ -16,7 +16,8 @@ pub fn trace(scene: &Scene, ray: Ray) -> Rgb {
                     let intensity = hit.normal
                         .dot(&light_ray.dir)
                         .max(0.0);
-                    color = color + light.color * intensity as f32;
+                    color = color +
+                            hit.material.color * light.color * intensity as f32;
                 }
             }
             color
@@ -33,7 +34,9 @@ fn occluded(surfaces: &[Box<Surface>], ray: Ray, max_distance: f64) -> bool {
         .is_some()
 }
 
-fn closest_hit(surfaces: &[Box<Surface>], ray: Ray) -> Option<Intersection> {
+fn closest_hit<'a>(surfaces: &'a [Box<Surface>],
+                   ray: Ray)
+                   -> Option<Intersection<'a>> {
     surfaces.iter()
         .filter_map(|s| s.intersection(ray))
         .min_by(|left, right| {
