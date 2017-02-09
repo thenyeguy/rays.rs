@@ -17,16 +17,16 @@ fn main() {
         (version: "0.1")
         (author: "Michael Nye <thenyeguy@gmail.com>")
         (about: "Ray tracer in Rust")
-        (@arg output: -o --output +takes_value "image file to render into")
         (@arg width: -w --width +takes_value "image width (pixels)")
         (@arg height: -h --height +takes_value "image height (pixels)")
         (@arg fov: --fov +takes_value "field of view (degrees)")
+        (@arg output: +required "image file to render into")
     )
         .get_matches();
-    let output = matches.value_of("output").unwrap_or("images/test.png");
     let width = value_t!(matches, "width", u32).unwrap_or(1000);
     let height = value_t!(matches, "height", u32).unwrap_or(1000);
     let fov = value_t!(matches, "fov", u32).unwrap_or(45);
+    let output = matches.value_of("output").unwrap();
 
     let scene = Scene {
         surfaces: vec![Box::new(Sphere::new(Point3::new(0.0, 0.0, 20.0), 2.0)),
