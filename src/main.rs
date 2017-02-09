@@ -8,11 +8,7 @@ extern crate rays;
 fn main() {
     use nalgebra::{Vector3, Point3};
     use palette::Rgb;
-    use rays::camera::Camera;
-    use rays::light::Light;
-    use rays::material::Material;
-    use rays::scene::Scene;
-    use rays::surface::{Plane, Sphere};
+    use rays::prelude::*;
     use std::error::Error;
     use std::time::Instant;
 
