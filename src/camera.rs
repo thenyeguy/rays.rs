@@ -1,6 +1,6 @@
 use image::{self, ImageBuffer, RgbImage};
 use nalgebra::{Origin, Point3, Vector3};
-use palette;
+use palette::{self, Limited};
 use std::f32;
 
 use scene::Scene;
@@ -47,11 +47,9 @@ impl Camera {
                     color = color + trace(scene, ray);
                 }
             }
-            let pixel = palette::pixel::Srgb::from(color /
-                                                   num_oversamples as f32);
-            image::Rgb([to_u8(pixel.red),
-                        to_u8(pixel.green),
-                        to_u8(pixel.blue)])
+            color = (color / num_oversamples as f32).clamp();
+            let srgb = palette::pixel::Srgb::from(color);
+            image::Rgb([to_u8(srgb.red), to_u8(srgb.green), to_u8(srgb.blue)])
         })
     }
 }
