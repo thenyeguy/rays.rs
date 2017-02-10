@@ -5,7 +5,6 @@ use std::f32;
 
 use scene::Scene;
 use ray::Ray;
-use render::trace;
 
 const OVERSAMPLE_FACTOR: isize = 3;
 
@@ -44,7 +43,7 @@ impl Camera {
                 for dy in &oversample_deltas {
                     let ray = Ray::new(self.pos,
                                        Vector3::new(x + dx, y + dy, self.z));
-                    color = color + trace(scene, ray);
+                    color = color + scene.trace(ray);
                 }
             }
             color = (color / num_oversamples as f32).clamp();
