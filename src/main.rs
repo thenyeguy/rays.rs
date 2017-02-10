@@ -43,6 +43,7 @@ fn main() {
                                            Vector3::new(0.0, 1.0, 0.0),
                                            Material::new(white)))],
         lights: vec![Light::new(Point3::new(10.0, -1.0, 0.0), yellow)],
+        ambient_light: white * 0.02,
     };
 
     let now = Instant::now();

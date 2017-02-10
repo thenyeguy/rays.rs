@@ -8,7 +8,7 @@ use surface::{Intersection, Surface};
 pub fn trace(scene: &Scene, ray: Ray) -> Rgb {
     match closest_hit(&scene.surfaces, ray) {
         Some(hit) => {
-            let mut color = Rgb::new(0.0, 0.0, 0.0);
+            let mut color = scene.ambient_light * hit.material.color;
             for light in &scene.lights {
                 let light_ray = Ray::new(hit.pos, light.pos - hit.pos);
                 let max_distance = (light.pos - hit.pos).norm();
