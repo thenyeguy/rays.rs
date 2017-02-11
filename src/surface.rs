@@ -1,4 +1,4 @@
-use nalgebra::{Dot, Norm, Point3, Vector3};
+use nalgebra::{Cross, Dot, Norm, Point3, Vector3};
 
 use material::Material;
 use ray::Ray;
@@ -103,6 +103,46 @@ impl Surface for Sphere {
                 normal: (pos - self.center).normalize(),
                 material: &self.material,
             })
+        }
+    }
+}
+
+pub struct Triangle {
+    plane: Plane,
+    vertices: [Point3<f32>; 3],
+    edges: [Vector3<f32>; 3],
+}
+
+impl Triangle {
+    pub fn new(vertices: [Point3<f32>; 3], material: Material) -> Self {
+        let e1 = vertices[1] - vertices[0];
+        let e2 = vertices[2] - vertices[1];
+        let e3 = vertices[0] - vertices[2];
+        let normal = e1.cross(&e2);
+        Triangle {
+            plane: Plane::new(vertices[0], normal, material),
+            vertices: vertices,
+            edges: [e1, e2, e3],
+        }
+    }
+}
+
+impl Surface for Triangle {
+    fn intersection(&self, ray: Ray) -> Option<Intersection> {
+        match self.plane.intersection(ray) {
+            Some(hit) => {
+                let v1 = hit.pos - self.vertices[0];
+                let v2 = hit.pos - self.vertices[1];
+                let v3 = hit.pos - self.vertices[2];
+                if self.plane.normal.dot(&self.edges[0].cross(&v1)) > 0.0 &&
+                   self.plane.normal.dot(&self.edges[1].cross(&v2)) > 0.0 &&
+                   self.plane.normal.dot(&self.edges[2].cross(&v3)) > 0.0 {
+                    Some(hit)
+                } else {
+                    None
+                }
+            }
+            None => None,
         }
     }
 }
