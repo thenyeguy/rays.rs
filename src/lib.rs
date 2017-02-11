@@ -9,4 +9,5 @@ pub mod material;
 pub mod prelude;
 pub mod ray;
 pub mod scene;
+pub mod scenes;
 pub mod surface;
