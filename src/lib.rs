@@ -6,6 +6,7 @@ extern crate palette;
 pub mod camera;
 pub mod light;
 pub mod material;
+pub mod object;
 pub mod prelude;
 pub mod ray;
 pub mod scene;

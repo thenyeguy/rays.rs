@@ -7,8 +7,6 @@ pub struct Material {
 
 impl Material {
     pub fn new(color: Rgb) -> Self {
-        Material {
-            color: color,
-        }
+        Material { color: color }
     }
 }

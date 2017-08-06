@@ -1,44 +1,37 @@
 use nalgebra::{Cross, Dot, Norm, Point3, Vector3};
 
-use material::Material;
 use ray::Ray;
 
 const EPSILON: f32 = 0.00001;
 
 #[derive(Copy,Clone,Debug)]
-pub struct Intersection<'a> {
+pub struct Intersection {
     pub distance: f32,
     pub pos: Point3<f32>,
     pub normal: Vector3<f32>,
-    pub material: &'a Material,
 }
 
 pub trait Surface {
-    fn intersection(&self, ray: Ray) -> Option<Intersection>;
+    fn intersect(&self, ray: Ray) -> Option<Intersection>;
 }
 
 
 pub struct Plane {
     point: Point3<f32>,
     normal: Vector3<f32>,
-    material: Material,
 }
 
 impl Plane {
-    pub fn new(point: Point3<f32>,
-               normal: Vector3<f32>,
-               material: Material)
-               -> Self {
+    pub fn new(point: Point3<f32>, normal: Vector3<f32>) -> Self {
         Plane {
             point: point,
             normal: normal.normalize(),
-            material: material,
         }
     }
 }
 
 impl Surface for Plane {
-    fn intersection(&self, ray: Ray) -> Option<Intersection> {
+    fn intersect(&self, ray: Ray) -> Option<Intersection> {
         let denom = self.normal.dot(&ray.dir);
         if denom.abs() < EPSILON {
             return None;
@@ -55,7 +48,6 @@ impl Surface for Plane {
                 } else {
                     -self.normal
                 },
-                material: &self.material,
             })
         }
     }
@@ -65,21 +57,19 @@ impl Surface for Plane {
 pub struct Sphere {
     center: Point3<f32>,
     radius: f32,
-    material: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Point3<f32>, radius: f32, material: Material) -> Self {
+    pub fn new(center: Point3<f32>, radius: f32) -> Self {
         Sphere {
             center: center,
             radius: radius,
-            material: material,
         }
     }
 }
 
 impl Surface for Sphere {
-    fn intersection(&self, ray: Ray) -> Option<Intersection> {
+    fn intersect(&self, ray: Ray) -> Option<Intersection> {
         // Find the discriminant
         let b = (ray.origin - self.center).dot(&ray.dir) * 2.0;
         let c = (ray.origin - self.center).norm_squared() -
@@ -101,7 +91,6 @@ impl Surface for Sphere {
                 distance: distance,
                 pos: pos,
                 normal: (pos - self.center).normalize(),
-                material: &self.material,
             })
         }
     }
@@ -114,13 +103,13 @@ pub struct Triangle {
 }
 
 impl Triangle {
-    pub fn new(vertices: [Point3<f32>; 3], material: Material) -> Self {
+    pub fn new(vertices: [Point3<f32>; 3]) -> Self {
         let e1 = vertices[1] - vertices[0];
         let e2 = vertices[2] - vertices[1];
         let e3 = vertices[0] - vertices[2];
         let normal = e1.cross(&e2);
         Triangle {
-            plane: Plane::new(vertices[0], normal, material),
+            plane: Plane::new(vertices[0], normal),
             vertices: vertices,
             edges: [e1, e2, e3],
         }
@@ -128,8 +117,8 @@ impl Triangle {
 }
 
 impl Surface for Triangle {
-    fn intersection(&self, ray: Ray) -> Option<Intersection> {
-        match self.plane.intersection(ray) {
+    fn intersect(&self, ray: Ray) -> Option<Intersection> {
+        match self.plane.intersect(ray) {
             Some(hit) => {
                 let v1 = hit.pos - self.vertices[0];
                 let v2 = hit.pos - self.vertices[1];

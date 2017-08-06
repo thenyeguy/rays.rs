@@ -2,11 +2,11 @@ use nalgebra::{Dot, Norm};
 use palette::Rgb;
 
 use light::Light;
+use object::{Collision, Object};
 use ray::Ray;
-use surface::{Intersection, Surface};
 
 pub struct Scene {
-    pub surfaces: Vec<Box<Surface>>,
+    pub objects: Vec<Object>,
     pub lights: Vec<Light>,
     pub global_illumination: Rgb,
 }
@@ -14,17 +14,16 @@ pub struct Scene {
 impl Scene {
     pub fn trace(&self, ray: Ray) -> Rgb {
         match self.closest_hit(ray) {
-            Some(hit) => {
-                let mut color = self.global_illumination * hit.material.color;
+            Some(Collision { intersection: int, emittance: emit }) => {
+                let mut color = self.global_illumination * emit;
                 for light in &self.lights {
-                    let light_ray = Ray::new(hit.pos, light.pos - hit.pos);
-                    let max_distance = (light.pos - hit.pos).norm();
+                    let light_ray = Ray::new(int.pos, light.pos - int.pos);
+                    let max_distance = (light.pos - int.pos).norm();
                     if !self.occluded(light_ray, max_distance) {
-                        let intensity = hit.normal
+                        let intensity = int.normal
                             .dot(&light_ray.dir)
                             .max(0.0);
-                        color = color +
-                                hit.material.color * light.color * intensity;
+                        color = color + emit * light.color * intensity;
                     }
                 }
                 color
@@ -33,20 +32,23 @@ impl Scene {
         }
     }
 
-    fn closest_hit(&self, ray: Ray) -> Option<Intersection> {
-        self.surfaces
+    fn closest_hit(&self, ray: Ray) -> Option<Collision> {
+        self.objects
             .iter()
-            .filter_map(|s| s.intersection(ray))
+            .filter_map(|obj| obj.collide(ray))
             .min_by(|left, right| {
-                left.distance.partial_cmp(&right.distance).unwrap()
+                left.intersection
+                    .distance
+                    .partial_cmp(&right.intersection.distance)
+                    .unwrap()
             })
     }
 
     fn occluded(&self, ray: Ray, max_distance: f32) -> bool {
-        self.surfaces
+        self.objects
             .iter()
-            .filter_map(|s| s.intersection(ray))
-            .filter(|i| i.distance < max_distance)
+            .filter_map(|obj| obj.collide(ray))
+            .filter(|col| col.intersection.distance < max_distance)
             .next()
             .is_some()
     }
