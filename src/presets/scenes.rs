@@ -62,3 +62,30 @@ pub fn pyramid() -> Scene {
         global_illumination: white * 0.05,
     }
 }
+
+pub fn sphere_in_room() -> Scene {
+    let white = Rgb::new(1.0, 1.0, 1.0);
+    let red = Rgb::new(1.0, 0.0, 0.0);
+    let blue = Rgb::new(0.1, 0.1, 1.0);
+    let yellow = Rgb::new(1.0, 0.9, 0.4);
+    Scene {
+        objects: vec![sphere(Point3::new(0.0, 6.0, 30.0), 4.0, white),
+                      plane(Point3::new(0.0, -10.0, 0.0),
+                            Vector3::new(0.0, 1.0, 0.0),
+                            white),
+                      plane(Point3::new(0.0, 10.0, 0.0),
+                            Vector3::new(0.0, 1.0, 0.0),
+                            white),
+                      plane(Point3::new(0.0, 0.0, 40.0),
+                            Vector3::new(0.0, 0.0, 1.0),
+                            white),
+                      plane(Point3::new(-10.0, 0.0, 0.0),
+                            Vector3::new(1.0, 0.0, 0.0),
+                            red),
+                      plane(Point3::new(10.0, 0.0, 0.0),
+                            Vector3::new(1.0, 0.0, 0.0),
+                            blue)],
+        lights: vec![Light::new(Point3::new(9.0, -1.0, 0.0), yellow)],
+        global_illumination: white * 0.05,
+    }
+}
