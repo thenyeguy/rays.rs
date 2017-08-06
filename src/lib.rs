@@ -8,7 +8,7 @@ pub mod light;
 pub mod material;
 pub mod object;
 pub mod prelude;
+pub mod presets;
 pub mod ray;
 pub mod scene;
-pub mod scenes;
 pub mod surface;
