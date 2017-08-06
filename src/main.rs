@@ -27,7 +27,7 @@ fn main() {
 
     let now = Instant::now();
     let camera = Camera::new(width, height, fov);
-    let img = camera.draw(&scenes::pyramid());
+    let img = camera.render(&scenes::basic_spheres());
     println!("Rendering took {} seconds.", now.elapsed().as_secs());
 
     match img.save(output) {

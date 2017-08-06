@@ -34,7 +34,7 @@ pub fn basic_spheres() -> Scene {
                              Vector3::new(0.0, 1.0, 0.0),
                              white)],
         lights: vec![Light::new(Point3::new(10.0, -1.0, 0.0), yellow)],
-        ambient_light: white * 0.02,
+        global_illumination: white * 0.02,
     }
 }
 
@@ -58,6 +58,6 @@ pub fn pyramid() -> Scene {
                              Vector3::new(0.0, 1.0, 0.0),
                              white)],
         lights: vec![Light::new(Point3::new(4.0, -2.0, 0.0), yellow)],
-        ambient_light: white * 0.05,
+        global_illumination: white * 0.05,
     }
 }

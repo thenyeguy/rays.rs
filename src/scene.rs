@@ -8,14 +8,14 @@ use surface::{Intersection, Surface};
 pub struct Scene {
     pub surfaces: Vec<Box<Surface>>,
     pub lights: Vec<Light>,
-    pub ambient_light: Rgb,
+    pub global_illumination: Rgb,
 }
 
 impl Scene {
     pub fn trace(&self, ray: Ray) -> Rgb {
         match self.closest_hit(ray) {
             Some(hit) => {
-                let mut color = self.ambient_light * hit.material.color;
+                let mut color = self.global_illumination * hit.material.color;
                 for light in &self.lights {
                     let light_ray = Ray::new(hit.pos, light.pos - hit.pos);
                     let max_distance = (light.pos - hit.pos).norm();

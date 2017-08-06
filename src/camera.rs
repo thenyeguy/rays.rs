@@ -28,7 +28,7 @@ impl Camera {
         }
     }
 
-    pub fn draw(&self, scene: &Scene) -> RgbImage {
+    pub fn render(&self, scene: &Scene) -> RgbImage {
         let oversample_deltas: Vec<_> = (0..OVERSAMPLE_FACTOR)
             .map(|i| {
                 (i - OVERSAMPLE_FACTOR / 2) as f32 / OVERSAMPLE_FACTOR as f32
