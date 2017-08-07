@@ -17,20 +17,30 @@ fn main() {
         (@arg width: -w --width +takes_value "image width (pixels)")
         (@arg height: -h --height +takes_value "image height (pixels)")
         (@arg fov: --fov +takes_value "field of view (degrees)")
-        (@arg output: +required "image file to render into")
+        (@arg scene: +required "the scene to render")
     )
         .get_matches();
     let width = value_t!(matches, "width", u32).unwrap_or(1000);
     let height = value_t!(matches, "height", u32).unwrap_or(1000);
     let fov = value_t!(matches, "fov", u32).unwrap_or(45);
-    let output = matches.value_of("output").unwrap();
+    let scene_name = matches.value_of("scene").unwrap();
+    let scene = match scene_name {
+        "basic_spheres" => scenes::basic_spheres(),
+        "pyramid" => scenes::pyramid(),
+        "sphere_in_room" => scenes::sphere_in_room(),
+        _ => {
+            println!("Invalid scene name: {}", scene_name);
+            std::process::exit(1);
+        }
+    };
 
-    let now = Instant::now();
+    let start = Instant::now();
     let camera = Camera::new(width, height, fov);
-    let img = camera.render(&scenes::sphere_in_room());
-    println!("Rendering took {} seconds.", now.elapsed().as_secs());
+    let img = camera.render(&scene);
+    println!("Rendering took {} seconds.", start.elapsed().as_secs());
 
-    match img.save(output) {
+    let output = format!("images/{}.png", scene_name);
+    match img.save(&output) {
         Ok(()) => println!("Wrote final image to {}", output),
         Err(e) => {
             println!("Could not write file: {}", e.description());
