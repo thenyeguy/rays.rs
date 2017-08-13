@@ -17,12 +17,21 @@ fn main() {
         (@arg width: -w --width +takes_value "image width (pixels)")
         (@arg height: -h --height +takes_value "image height (pixels)")
         (@arg fov: --fov +takes_value "field of view (degrees)")
+        (@arg samples: --samples +takes_value "number of samples per pixel")
+        (@arg reflections: --reflections +takes_value
+            "maximum number of reflections per sample")
         (@arg scene: +required "the scene to render")
     )
         .get_matches();
-    let width = value_t!(matches, "width", u32).unwrap_or(100);
-    let height = value_t!(matches, "height", u32).unwrap_or(100);
-    let fov = value_t!(matches, "fov", u32).unwrap_or(45);
+
+    let renderer = Renderer {
+        width: value_t!(matches, "width", u32).unwrap_or(100),
+        height: value_t!(matches, "height", u32).unwrap_or(100),
+        fov: value_t!(matches, "fov", u32).unwrap_or(45),
+        samples_per_pixel: value_t!(matches, "samples", u32).unwrap_or(50),
+        max_reflections: value_t!(matches, "reflections", u32).unwrap_or(5),
+    };
+
     let scene_name = matches.value_of("scene").unwrap();
     let scene = match scene_name {
         "basic_spheres" => scenes::basic_spheres(),
@@ -35,8 +44,7 @@ fn main() {
     };
 
     let start = Instant::now();
-    let camera = Camera::new(width, height, fov);
-    let img = camera.render(&scene);
+    let img = renderer.render(&scene);
     println!("Rendering took {} seconds.", start.elapsed().as_secs());
 
     let output = format!("images/{}.png", scene_name);

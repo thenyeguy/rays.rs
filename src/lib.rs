@@ -10,5 +10,6 @@ pub mod object;
 pub mod prelude;
 pub mod presets;
 pub mod ray;
+pub mod render;
 pub mod scene;
 pub mod surface;
