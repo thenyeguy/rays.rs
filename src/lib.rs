@@ -2,9 +2,9 @@ extern crate image;
 extern crate nalgebra;
 extern crate num;
 extern crate palette;
+extern crate rand;
 
 pub mod camera;
-pub mod light;
 pub mod material;
 pub mod object;
 pub mod prelude;

@@ -20,8 +20,8 @@ fn main() {
         (@arg scene: +required "the scene to render")
     )
         .get_matches();
-    let width = value_t!(matches, "width", u32).unwrap_or(1000);
-    let height = value_t!(matches, "height", u32).unwrap_or(1000);
+    let width = value_t!(matches, "width", u32).unwrap_or(100);
+    let height = value_t!(matches, "height", u32).unwrap_or(100);
     let fov = value_t!(matches, "fov", u32).unwrap_or(45);
     let scene_name = matches.value_of("scene").unwrap();
     let scene = match scene_name {

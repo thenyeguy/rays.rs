@@ -6,7 +6,7 @@ use std::f32;
 use scene::Scene;
 use ray::Ray;
 
-const OVERSAMPLE_FACTOR: isize = 3;
+const OVERSAMPLE_FACTOR: isize = 100;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Camera {

@@ -1,38 +1,41 @@
-use nalgebra::{Dot, Norm};
 use palette::Rgb;
 
-use light::Light;
-use object::{Collision, Object};
+use material::{Reflection, Sample};
+use object::Object;
 use ray::Ray;
+
+const MAX_DEPTH: usize = 5;
 
 pub struct Scene {
     pub objects: Vec<Object>,
-    pub lights: Vec<Light>,
     pub global_illumination: Rgb,
 }
 
 impl Scene {
     pub fn trace(&self, ray: Ray) -> Rgb {
-        match self.closest_hit(ray) {
-            Some(Collision { intersection: int, emittance: emit }) => {
-                let mut color = self.global_illumination * emit;
-                for light in &self.lights {
-                    let light_ray = Ray::new(int.pos, light.pos - int.pos);
-                    let max_distance = (light.pos - int.pos).norm();
-                    if !self.occluded(light_ray, max_distance) {
-                        let intensity = int.normal
-                            .dot(&light_ray.dir)
-                            .max(0.0);
-                        color = color + emit * light.color * intensity;
+        self.trace_internal(ray, 0)
+    }
+
+    fn trace_internal(&self, ray: Ray, depth: usize) -> Rgb {
+        if depth > MAX_DEPTH {
+            return self.global_illumination;
+        }
+
+        match self.sample(ray) {
+            Some(sample) => {
+                let reflected = match sample.reflection {
+                    Some(Reflection { ray, intensity }) => {
+                        self.trace_internal(ray, depth + 1) * intensity
                     }
-                }
-                color
+                    None => Rgb::new(0.0, 0.0, 0.0),
+                };
+                sample.color * (reflected + sample.emission)
             }
-            _ => Rgb::new(0.0, 0.0, 0.0),
+            _ => self.global_illumination,
         }
     }
 
-    fn closest_hit(&self, ray: Ray) -> Option<Collision> {
+    fn sample(&self, ray: Ray) -> Option<Sample> {
         self.objects
             .iter()
             .filter_map(|obj| obj.collide(ray))
@@ -42,14 +45,6 @@ impl Scene {
                     .partial_cmp(&right.intersection.distance)
                     .unwrap()
             })
-    }
-
-    fn occluded(&self, ray: Ray, max_distance: f32) -> bool {
-        self.objects
-            .iter()
-            .filter_map(|obj| obj.collide(ray))
-            .filter(|col| col.intersection.distance < max_distance)
-            .next()
-            .is_some()
+            .map(|collision| collision.sample)
     }
 }

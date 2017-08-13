@@ -1,13 +1,11 @@
-use palette::Rgb;
-
-use material::Material;
+use material::{Material, Sample};
 use ray::Ray;
 use surface::{Intersection, Surface};
 
 #[derive(Copy,Clone,Debug)]
 pub struct Collision {
     pub intersection: Intersection,
-    pub emittance: Rgb,
+    pub sample: Sample,
 }
 
 pub struct Object {
@@ -29,7 +27,7 @@ impl Object {
         self.surface.intersect(ray).map(|intersection| {
             Collision {
                 intersection: intersection,
-                emittance: self.material.color,
+                sample: self.material.sample(intersection),
             }
         })
     }
