@@ -9,13 +9,13 @@ pub struct Collision {
 }
 
 pub struct Object {
-    surface: Box<Surface>,
+    surface: Box<Surface + Sync>,
     material: Material,
 }
 
 impl Object {
     pub fn new<S>(surface: S, material: Material) -> Self
-        where S: 'static + Surface
+        where S: 'static + Surface + Sync
     {
         Object {
             surface: Box::new(surface),

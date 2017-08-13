@@ -3,6 +3,7 @@ extern crate nalgebra;
 extern crate num;
 extern crate palette;
 extern crate rand;
+extern crate rayon;
 
 pub mod camera;
 pub mod material;
