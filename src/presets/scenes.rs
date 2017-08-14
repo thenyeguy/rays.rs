@@ -9,12 +9,12 @@ use surface::*;
 pub fn sphere_room() -> Scene {
     SceneBuilder::new()
         .global_illumination(White, 0.1)
-        .sphere((0.0, 6.0, 30.0), 4.0, Diffuse(White))
+        .sphere((0.0, -6.0, 30.0), 4.0, Diffuse(White))
         .plane((0.0, 0.0, 40.0), z(), Diffuse(White))
         .plane((-10.0, 0.0, 0.0), x(), Diffuse(Red))
         .plane((10.0, 0.0, 0.0), x(), Diffuse(Blue))
-        .plane((0.0, 10.0, 0.0), y(), Diffuse(White))
-        .plane((0.0, -10.0, 0.0), y(), Light(White))
+        .plane((0.0, -10.0, 0.0), y(), Diffuse(White))
+        .plane((0.0, 10.0, 0.0), y(), Light(White))
         .build()
 }
 

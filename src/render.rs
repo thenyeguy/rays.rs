@@ -26,7 +26,7 @@ impl Renderer {
             .into_par_iter()
             .map(|n| {
                 let x = (n / self.width) as f32 - (self.width / 2) as f32;
-                let y = (n % self.width) as f32 - (self.height / 2) as f32;
+                let y = (self.height / 2) as f32 - (n % self.width) as f32;
 
                 let mut color = palette::Rgb::new(0.0, 0.0, 0.0);
                 let mut rng = rand::thread_rng();
