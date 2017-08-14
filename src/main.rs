@@ -47,7 +47,10 @@ fn main() {
     let img = renderer.render(&scene);
     println!("Rendering took {} seconds.", start.elapsed().as_secs());
 
-    let output = format!("images/{}.png", scene_name);
+    let output = format!("images/{}_{}x{}.png",
+                         scene_name,
+                         renderer.width,
+                         renderer.height);
     match img.save(&output) {
         Ok(()) => println!("Wrote final image to {}", output),
         Err(e) => {
