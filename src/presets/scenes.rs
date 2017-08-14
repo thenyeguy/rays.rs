@@ -6,95 +6,111 @@ use object::Object;
 use scene::Scene;
 use surface::*;
 
-fn plane(point: Point3<f32>, normal: Vector3<f32>, color: Rgb) -> Object {
-    Object::new(Plane::new(point, normal), Material::diffuse(color))
+pub fn sphere_room() -> Scene {
+    SceneBuilder::new()
+        .global_illumination(White, 0.1)
+        .sphere((0.0, 6.0, 30.0), 4.0, Diffuse(White))
+        .plane((0.0, 0.0, 40.0), z(), Diffuse(White))
+        .plane((-10.0, 0.0, 0.0), x(), Diffuse(Red))
+        .plane((10.0, 0.0, 0.0), x(), Diffuse(Blue))
+        .plane((0.0, 10.0, 0.0), y(), Diffuse(White))
+        .plane((0.0, -10.0, 0.0), y(), Light(White))
+        .build()
 }
 
-fn sphere(center: Point3<f32>, radius: f32, color: Rgb) -> Object {
-    Object::new(Sphere::new(center, radius), Material::diffuse(color))
+struct SceneBuilder {
+    scene: Scene,
 }
 
-fn triangle(v1: Point3<f32>,
-            v2: Point3<f32>,
-            v3: Point3<f32>,
-            color: Rgb)
-            -> Object {
-    Object::new(Triangle::new([v1, v2, v3]), Material::diffuse(color))
-}
+impl SceneBuilder {
+    fn new() -> SceneBuilder {
+        SceneBuilder {
+            scene: Scene {
+                objects: Vec::new(),
+                global_illumination: Rgb::default(),
+            },
+        }
+    }
 
-fn light(point: Point3<f32>, color: Rgb) -> Object {
-    Object::new(Sphere::new(point, 1.0), Material::light(color))
-}
+    fn global_illumination(mut self, color: Color, intensity: f32) -> Self {
+        let color: Rgb = color.into();
+        self.scene.global_illumination = color * intensity;
+        self
+    }
 
-fn planar_light(point: Point3<f32>,
-                normal: Vector3<f32>,
-                color: Rgb)
-                -> Object {
-    Object::new(Plane::new(point, normal), Material::light(color))
-}
+    fn plane(mut self,
+             center: (f32, f32, f32),
+             normal: (f32, f32, f32),
+             mat: Mat)
+             -> Self {
+        self.scene
+            .objects
+            .push(Object::new(Plane::new(Point3::new(center.0,
+                                                     center.1,
+                                                     center.2),
+                                         Vector3::new(normal.0,
+                                                      normal.1,
+                                                      normal.2)),
+                              mat.into()));
+        self
+    }
 
-pub fn basic_spheres() -> Scene {
-    let white = Rgb::new(1.0, 1.0, 1.0);
-    let red = Rgb::new(1.0, 0.0, 0.0);
-    let blue = Rgb::new(0.1, 0.1, 1.0);
-    let yellow = Rgb::new(1.0, 0.9, 0.4);
-    Scene {
-        objects: vec![sphere(Point3::new(0.0, 0.0, 20.0), 2.0, red),
-                      sphere(Point3::new(3.0, 1.0, 15.0), 1.0, blue),
-                      plane(Point3::new(0.0, 2.0, 0.0),
-                            Vector3::new(0.0, 1.0, 0.0),
-                            white),
-                      light(Point3::new(10.0, -1.0, 0.0), yellow)],
-        global_illumination: white * 0.02,
+    fn sphere(mut self,
+              center: (f32, f32, f32),
+              r: f32,
+              material: Mat)
+              -> Self {
+        self.scene
+            .objects
+            .push(Object::new(Sphere::new(Point3::new(center.0,
+                                                      center.1,
+                                                      center.2),
+                                          r),
+                              material.into()));
+        self
+    }
+
+    fn build(self) -> Scene {
+        self.scene
     }
 }
 
-pub fn pyramid() -> Scene {
-    let white = Rgb::new(1.0, 1.0, 1.0);
-    let yellow = Rgb::new(1.0, 0.9, 0.4);
-
-    // Corners
-    let front = Point3::new(0.0, 1.0, 8.0);
-    let left = Point3::new(-2.0, 1.0, 10.0);
-    let right = Point3::new(2.0, 1.0, 10.0);
-    let back = Point3::new(0.0, 1.0, 12.0);
-    let top = Point3::new(0.0, -1.0, 10.0);
-
-    Scene {
-        objects: vec![triangle(front, left, top, white),
-                      triangle(front, right, top, white),
-                      triangle(back, left, top, white),
-                      triangle(back, right, top, white),
-                      plane(Point3::new(0.0, 1.0, 0.0),
-                            Vector3::new(0.0, 1.0, 0.0),
-                            white),
-                      light(Point3::new(4.0, -2.0, 0.0), yellow)],
-        global_illumination: white * 0.05,
+enum Mat {
+    Diffuse(Color),
+    Light(Color),
+}
+use self::Mat::*;
+impl Into<Material> for Mat {
+    fn into(self) -> Material {
+        match self {
+            Diffuse(color) => Material::diffuse(color.into()),
+            Light(color) => Material::light(color.into()),
+        }
     }
 }
 
-pub fn sphere_in_room() -> Scene {
-    let white = Rgb::new(1.0, 1.0, 1.0);
-    let red = Rgb::new(1.0, 0.0, 0.0);
-    let blue = Rgb::new(0.1, 0.1, 1.0);
-    let yellow = Rgb::new(1.0, 0.9, 0.4);
-    Scene {
-        objects: vec![sphere(Point3::new(0.0, 6.0, 30.0), 4.0, white),
-                      plane(Point3::new(0.0, 10.0, 0.0),
-                            Vector3::new(0.0, 1.0, 0.0),
-                            white),
-                      plane(Point3::new(0.0, 0.0, 40.0),
-                            Vector3::new(0.0, 0.0, 1.0),
-                            white),
-                      plane(Point3::new(-10.0, 0.0, 0.0),
-                            Vector3::new(1.0, 0.0, 0.0),
-                            red),
-                      plane(Point3::new(10.0, 0.0, 0.0),
-                            Vector3::new(1.0, 0.0, 0.0),
-                            blue),
-                      planar_light(Point3::new(0.0, -10.0, 0.0),
-                                   Vector3::new(0.0, 1.0, 0.0),
-                                   yellow)],
-        global_illumination: white * 0.05,
+enum Color {
+    Blue,
+    Red,
+    White,
+}
+use self::Color::*;
+impl Into<Rgb> for Color {
+    fn into(self) -> Rgb {
+        match self {
+            Blue => Rgb::new(0.1, 0.1, 1.0),
+            Red => Rgb::new(1.0, 0.0, 0.0),
+            White => Rgb::new(1.0, 1.0, 1.0),
+        }
     }
+}
+
+fn x() -> (f32, f32, f32) {
+    (1.0, 0.0, 0.0)
+}
+fn y() -> (f32, f32, f32) {
+    (0.0, 1.0, 0.0)
+}
+fn z() -> (f32, f32, f32) {
+    (0.0, 0.0, 1.0)
 }

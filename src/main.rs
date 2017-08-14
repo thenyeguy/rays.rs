@@ -34,9 +34,7 @@ fn main() {
 
     let scene_name = matches.value_of("scene").unwrap();
     let scene = match scene_name {
-        "basic_spheres" => scenes::basic_spheres(),
-        "pyramid" => scenes::pyramid(),
-        "sphere_in_room" => scenes::sphere_in_room(),
+        "sphere_room" => scenes::sphere_room(),
         _ => {
             println!("Invalid scene name: {}", scene_name);
             std::process::exit(1);
