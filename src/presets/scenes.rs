@@ -9,7 +9,8 @@ use surface::*;
 pub fn sphere_room() -> Scene {
     SceneBuilder::new()
         .global_illumination(White, 0.1)
-        .sphere((0.0, -6.0, 30.0), 4.0, Diffuse(White))
+        .sphere((-3.0, -7.0, 33.0), 3.0, Specular(White))
+        .sphere((4.0, -6.0, 30.0), 4.0, Diffuse(White))
         .plane((0.0, 0.0, 40.0), z(), Diffuse(White))
         .plane((-10.0, 0.0, 0.0), x(), Diffuse(Red))
         .plane((10.0, 0.0, 0.0), x(), Diffuse(Blue))
@@ -77,6 +78,7 @@ impl SceneBuilder {
 
 enum Mat {
     Diffuse(Color),
+    Specular(Color),
     Light(Color),
 }
 use self::Mat::*;
@@ -84,6 +86,7 @@ impl Into<Material> for Mat {
     fn into(self) -> Material {
         match self {
             Diffuse(color) => Material::diffuse(color.into()),
+            Specular(color) => Material::specular(color.into()),
             Light(color) => Material::light(color.into()),
         }
     }

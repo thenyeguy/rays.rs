@@ -23,6 +23,7 @@ pub struct Sample {
 enum Kind {
     Emissive,
     Diffuse,
+    Specular,
 }
 
 #[derive(Debug)]
@@ -49,7 +50,15 @@ impl Material {
         }
     }
 
-    pub fn sample(&self, intersection: Intersection) -> Sample {
+    pub fn specular(color: Rgb) -> Self {
+        Material {
+            color: color,
+            emittance: 0.0,
+            kind: Kind::Specular,
+        }
+    }
+
+    pub fn sample(&self, ray: Ray, int: Intersection) -> Sample {
         let reflection = match self.kind {
             Kind::Emissive => None,
             Kind::Diffuse => {
@@ -61,18 +70,25 @@ impl Material {
                 let dir = Vector3::new(zp * theta.cos(), zp * theta.sin(), z);
 
                 // Ensure we sample only from a hemisphere
-                let intensity = dir.dot(&intersection.normal);
+                let intensity = dir.dot(&int.normal);
                 if intensity < 0.0 {
                     Some(Reflection {
-                        ray: Ray::new(intersection.pos, -1.0 * dir),
+                        ray: Ray::new(int.pos, -1.0 * dir),
                         intensity: -intensity,
                     })
                 } else {
                     Some(Reflection {
-                        ray: Ray::new(intersection.pos, dir),
+                        ray: Ray::new(int.pos, dir),
                         intensity: intensity,
                     })
                 }
+            }
+            Kind::Specular => {
+                let dir = ray.dir - 2.0 * int.normal.dot(&ray.dir) * int.normal;
+                Some(Reflection {
+                    ray: Ray::new(int.pos, dir),
+                    intensity: 1.0,
+                })
             }
         };
         Sample {

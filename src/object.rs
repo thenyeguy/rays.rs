@@ -27,7 +27,7 @@ impl Object {
         self.surface.intersect(ray).map(|intersection| {
             Collision {
                 intersection: intersection,
-                sample: self.material.sample(intersection),
+                sample: self.material.sample(ray, intersection),
             }
         })
     }
