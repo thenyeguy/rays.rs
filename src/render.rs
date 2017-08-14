@@ -1,5 +1,6 @@
 use image::{self, ImageBuffer, RgbImage};
 use palette::{self, Limited, Rgb};
+use rand::{self, Rng};
 use rayon::prelude::*;
 use std::f32;
 
@@ -20,16 +21,24 @@ pub struct Renderer {
 impl Renderer {
     pub fn render(&self, scene: &Scene) -> RgbImage {
         let camera = Camera::new(self.width, self.height, self.fov);
+
         let pixels: Vec<_> = (0..self.width * self.height)
             .into_par_iter()
             .map(|n| {
                 let x = (n / self.width) as f32 - (self.width / 2) as f32;
                 let y = (n % self.width) as f32 - (self.height / 2) as f32;
+
                 let mut color = palette::Rgb::new(0.0, 0.0, 0.0);
+                let mut rng = rand::thread_rng();
                 for _ in 0..self.samples_per_pixel {
-                    color = color + self.trace(scene, camera.get_ray(x, y), 0);
+                    let dx = rng.next_f32() - 0.5;
+                    let dy = rng.next_f32() - 0.5;
+                    color =
+                        color +
+                        self.trace(scene, camera.get_ray(x + dx, y + dy), 0);
                 }
                 color = (color / self.samples_per_pixel as f32).clamp();
+
                 let srgb = palette::pixel::Srgb::from(color);
                 image::Rgb([to_u8(srgb.red),
                             to_u8(srgb.green),
