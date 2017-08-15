@@ -1,4 +1,4 @@
-use image::{self, ImageBuffer, RgbImage};
+use image::{self, ImageBuffer, RgbaImage};
 use palette::{self, Limited, Rgb};
 use rand::{self, Rng};
 use rayon::prelude::*;
@@ -19,7 +19,7 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn render(&self, scene: &Scene) -> RgbImage {
+    pub fn render(&self, scene: &Scene) -> RgbaImage {
         let camera = Camera::new(self.width, self.height, self.fov);
 
         let pixels: Vec<_> = (0..self.width * self.height)
@@ -40,9 +40,7 @@ impl Renderer {
                 color = (color / self.samples_per_pixel as f32).clamp();
 
                 let srgb = palette::pixel::Srgb::from(color);
-                image::Rgb([to_u8(srgb.red),
-                            to_u8(srgb.green),
-                            to_u8(srgb.blue)])
+                image::Rgba(srgb.to_pixel())
             })
             .collect();
 
@@ -71,9 +69,4 @@ impl Renderer {
             _ => scene.global_illumination,
         }
     }
-}
-
-#[inline]
-fn to_u8(value: f32) -> u8 {
-    (value * 255.0) as u8
 }
