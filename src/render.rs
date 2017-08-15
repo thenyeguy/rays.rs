@@ -25,8 +25,8 @@ impl Renderer {
         let pixels: Vec<_> = (0..self.width * self.height)
             .into_par_iter()
             .map(|n| {
-                let x = (n / self.width) as f32 - (self.width / 2) as f32;
-                let y = (self.height / 2) as f32 - (n % self.width) as f32;
+                let x = (n % self.width) as f32 - (self.width / 2) as f32;
+                let y = (self.height / 2) as f32 - (n / self.width) as f32;
 
                 let mut color = palette::Rgb::new(0.0, 0.0, 0.0);
                 let mut rng = rand::thread_rng();
@@ -48,7 +48,7 @@ impl Renderer {
 
         let mut image = ImageBuffer::new(self.width, self.height);
         for n in 0..self.width * self.height {
-            image.put_pixel(n / self.width, n % self.width, pixels[n as usize]);
+            image.put_pixel(n % self.width, n / self.width, pixels[n as usize]);
         }
         image
     }
