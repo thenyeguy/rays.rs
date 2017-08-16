@@ -84,7 +84,9 @@ impl Material {
                 }
             }
             Kind::Specular => {
-                let dir = ray.dir - 2.0 * int.normal.dot(&ray.dir) * int.normal;
+                let ray_dir = ray.dir.as_ref();
+                let normal = int.normal.as_ref();
+                let dir = ray_dir - 2.0 * normal.dot(ray_dir) * normal;
                 Some(Reflection {
                     ray: Ray::new(int.pos, dir),
                     intensity: 1.0,

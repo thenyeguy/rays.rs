@@ -1,4 +1,4 @@
-use nalgebra::{Point3, Vector3};
+use nalgebra::{Point3, Unit, Vector3};
 use std::fmt::Debug;
 
 use ray::Ray;
@@ -9,7 +9,7 @@ const EPSILON: f32 = 0.00001;
 pub struct Intersection {
     pub distance: f32,
     pub pos: Point3<f32>,
-    pub normal: Vector3<f32>,
+    pub normal: Unit<Vector3<f32>>,
 }
 
 pub trait Surface where Self: Debug {
@@ -20,14 +20,14 @@ pub trait Surface where Self: Debug {
 #[derive(Copy, Clone, Debug)]
 pub struct Plane {
     point: Point3<f32>,
-    normal: Vector3<f32>,
+    normal: Unit<Vector3<f32>>,
 }
 
 impl Plane {
     pub fn new(point: Point3<f32>, normal: Vector3<f32>) -> Self {
         Plane {
             point: point,
-            normal: normal.normalize(),
+            normal: Unit::new_normalize(normal),
         }
     }
 }
@@ -93,7 +93,7 @@ impl Surface for Sphere {
             Some(Intersection {
                 distance: distance,
                 pos: pos,
-                normal: (pos - self.center).normalize(),
+                normal: Unit::new_normalize(pos - self.center),
             })
         }
     }
