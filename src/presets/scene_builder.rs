@@ -1,4 +1,4 @@
-use nalgebra::{Vector3, Point3};
+use nalgebra::{Point3, Vector3};
 use palette::Rgb;
 
 use material::Material;

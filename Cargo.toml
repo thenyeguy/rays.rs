@@ -6,7 +6,7 @@ authors = ["Michael Nye <thenyeguy@gmail.com>"]
 [dependencies]
 clap = "2.20"
 image = "0.12"
-nalgebra = "0.10"
+nalgebra = "0.13"
 num = "0.1"
 palette = "0.2"
 rand = "0.3"

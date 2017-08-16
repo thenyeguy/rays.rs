@@ -1,4 +1,4 @@
-use nalgebra::{Cross, Dot, Norm, Point3, Vector3};
+use nalgebra::{Point3, Vector3};
 use std::fmt::Debug;
 
 use ray::Ray;

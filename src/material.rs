@@ -1,4 +1,4 @@
-use nalgebra::{Dot, Vector3};
+use nalgebra::Vector3;
 use palette::Rgb;
 use rand::{self, Rng};
 use std::f32::consts::PI;

@@ -1,4 +1,4 @@
-use nalgebra::{Origin, Point3, Vector3};
+use nalgebra::{self as na, Point3, Vector3};
 use std::f32::consts::PI;
 
 use ray::Ray;
@@ -17,7 +17,7 @@ impl Camera {
         Camera {
             width: width,
             height: height,
-            pos: Point3::origin(),
+            pos: na::origin(),
             z: (width as f32 / 2.0) /
                 (fov as f32 * PI / 180.0 / 2.0).tan(),
         }
