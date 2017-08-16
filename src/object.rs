@@ -1,10 +1,10 @@
 use material::{Material, Sample};
 use ray::Ray;
-use surface::{Intersection, Surface};
+use surface::Surface;
 
 #[derive(Copy,Clone,Debug)]
 pub struct Collision {
-    pub intersection: Intersection,
+    pub distance: f32,
     pub sample: Sample,
 }
 
@@ -24,10 +24,10 @@ impl Object {
     }
 
     pub fn collide(&self, ray: Ray) -> Option<Collision> {
-        self.surface.intersect(ray).map(|intersection| {
+        self.surface.intersect(ray).map(|ref intersection| {
             Collision {
-                intersection: intersection,
-                sample: self.material.sample(ray, intersection),
+                distance: intersection.distance,
+                sample: self.material.sample(ray, &intersection),
             }
         })
     }

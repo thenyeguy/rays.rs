@@ -58,7 +58,7 @@ impl Material {
         }
     }
 
-    pub fn sample(&self, ray: Ray, int: Intersection) -> Sample {
+    pub fn sample(&self, ray: Ray, int: &Intersection) -> Sample {
         let reflection = match self.kind {
             Kind::Emissive => None,
             Kind::Diffuse => {
