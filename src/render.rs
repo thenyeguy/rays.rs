@@ -9,7 +9,7 @@ use material::Reflection;
 use ray::Ray;
 use scene::Scene;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Renderer {
     pub width: u32,
     pub height: u32,

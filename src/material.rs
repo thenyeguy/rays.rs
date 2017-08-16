@@ -6,27 +6,27 @@ use std::f32::consts::PI;
 use ray::Ray;
 use surface::Intersection;
 
-#[derive(Debug,Copy,Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Reflection {
     pub ray: Ray,
     pub intensity: f32,
 }
 
-#[derive(Debug,Copy,Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Sample {
     pub color: Rgb,
     pub emission: f32,
     pub reflection: Option<Reflection>,
 }
 
-#[derive(Debug,Copy,Clone)]
+#[derive(Copy, Clone, Debug)]
 enum Kind {
     Emissive,
     Diffuse,
     Specular,
 }
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Material {
     color: Rgb,
     emittance: f32,

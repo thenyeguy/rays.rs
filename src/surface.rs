@@ -1,21 +1,23 @@
 use nalgebra::{Cross, Dot, Norm, Point3, Vector3};
+use std::fmt::Debug;
 
 use ray::Ray;
 
 const EPSILON: f32 = 0.00001;
 
-#[derive(Copy,Clone,Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Intersection {
     pub distance: f32,
     pub pos: Point3<f32>,
     pub normal: Vector3<f32>,
 }
 
-pub trait Surface {
+pub trait Surface where Self: Debug {
     fn intersect(&self, ray: Ray) -> Option<Intersection>;
 }
 
 
+#[derive(Copy, Clone, Debug)]
 pub struct Plane {
     point: Point3<f32>,
     normal: Vector3<f32>,
@@ -54,6 +56,7 @@ impl Surface for Plane {
 }
 
 
+#[derive(Copy, Clone, Debug)]
 pub struct Sphere {
     center: Point3<f32>,
     radius: f32,
@@ -96,6 +99,8 @@ impl Surface for Sphere {
     }
 }
 
+
+#[derive(Copy, Clone, Debug)]
 pub struct Triangle {
     plane: Plane,
     vertices: [Point3<f32>; 3],

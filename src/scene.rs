@@ -4,6 +4,7 @@ use material::Sample;
 use object::Object;
 use ray::Ray;
 
+#[derive(Debug)]
 pub struct Scene {
     pub objects: Vec<Object>,
     pub global_illumination: Rgb,

@@ -2,12 +2,13 @@ use material::{Material, Sample};
 use ray::Ray;
 use surface::Surface;
 
-#[derive(Copy,Clone,Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Collision {
     pub distance: f32,
     pub sample: Sample,
 }
 
+#[derive(Debug)]
 pub struct Object {
     surface: Box<Surface + Sync>,
     material: Material,
