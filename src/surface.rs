@@ -102,41 +102,56 @@ impl Surface for Sphere {
 
 #[derive(Copy, Clone, Debug)]
 pub struct Triangle {
-    plane: Plane,
-    vertices: [Point3<f32>; 3],
-    edges: [Vector3<f32>; 3],
+    vertex: Point3<f32>,
+    edge1: Vector3<f32>,
+    edge2: Vector3<f32>,
+    normal: Unit<Vector3<f32>>,
 }
 
 impl Triangle {
     pub fn new(vertices: [Point3<f32>; 3]) -> Self {
         let e1 = vertices[1] - vertices[0];
-        let e2 = vertices[2] - vertices[1];
-        let e3 = vertices[0] - vertices[2];
-        let normal = e1.cross(&e2);
+        let e2 = vertices[2] - vertices[0];
         Triangle {
-            plane: Plane::new(vertices[0], normal),
-            vertices: vertices,
-            edges: [e1, e2, e3],
+            vertex: vertices[0],
+            edge1: e1,
+            edge2: e2,
+            normal: Unit::new_normalize(e1.cross(&e2)),
         }
     }
 }
 
 impl Surface for Triangle {
     fn intersect(&self, ray: Ray) -> Option<Intersection> {
-        match self.plane.intersect(ray) {
-            Some(hit) => {
-                let v1 = hit.pos - self.vertices[0];
-                let v2 = hit.pos - self.vertices[1];
-                let v3 = hit.pos - self.vertices[2];
-                if self.plane.normal.dot(&self.edges[0].cross(&v1)) > 0.0 &&
-                   self.plane.normal.dot(&self.edges[1].cross(&v2)) > 0.0 &&
-                   self.plane.normal.dot(&self.edges[2].cross(&v3)) > 0.0 {
-                    Some(hit)
-                } else {
-                    None
-                }
-            }
-            None => None,
+        let pvec = ray.dir.as_ref().cross(&self.edge2);
+        let det = self.edge1.dot(&pvec);
+        if det.abs() < EPSILON {
+            // Ray is parallel to plane.
+            return None;
         }
+        let inv_det = 1.0 / det;
+
+        let tvec = ray.origin - self.vertex;
+        let u = tvec.dot(&pvec) * inv_det;
+        if u < 0.0 || u > 1.0 {
+            return None;
+        }
+
+        let qvec = tvec.cross(&self.edge1);
+        let v = qvec.dot(ray.dir.as_ref()) * inv_det;
+        if v < 0.0 || (u + v) > 1.0 {
+            return None;
+        }
+
+        let dist = self.edge2.dot(&qvec) * inv_det;
+        if dist < EPSILON {
+            return None;
+        }
+
+        Some(Intersection {
+            distance: dist,
+            pos: ray.along(dist),
+            normal: if det > 0.0 { self.normal } else { -self.normal },
+        })
     }
 }
