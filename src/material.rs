@@ -1,6 +1,6 @@
 use nalgebra::Vector3;
 use palette::Rgb;
-use rand::{self, Rng};
+use rand::Rng;
 use std::f32::consts::PI;
 
 use ray::Ray;
@@ -58,14 +58,13 @@ impl Material {
         }
     }
 
-    pub fn sample(&self, ray: Ray, int: &Intersection) -> Sample {
+    pub fn sample(&self, rng: &mut Rng, ray: Ray, int: &Intersection) -> Sample {
         let reflection = match self.kind {
             Kind::Emissive => None,
             Kind::Diffuse => {
                 // Generate a random direction vector.
-                let mut rng = rand::thread_rng();
-                let theta = rng.gen_range(0.0, 2.0 * PI);
-                let z: f32 = rng.gen_range(0.0, 1.0);
+                let theta = rng.next_f32() * 2.0 * PI;
+                let z: f32 = rng.next_f32();
                 let zp = (1.0 - z * z).sqrt();
                 let dir = Vector3::new(zp * theta.cos(), zp * theta.sin(), z);
 

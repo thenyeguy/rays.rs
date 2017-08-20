@@ -1,3 +1,5 @@
+use rand::Rng;
+
 use material::{Material, Sample};
 use ray::Ray;
 use surface::Surface;
@@ -24,11 +26,11 @@ impl Object {
         }
     }
 
-    pub fn collide(&self, ray: Ray) -> Option<Collision> {
+    pub fn collide(&self, rng: &mut Rng, ray: Ray) -> Option<Collision> {
         self.surface.intersect(ray).map(|ref intersection| {
             Collision {
                 distance: intersection.distance,
-                sample: self.material.sample(ray, &intersection),
+                sample: self.material.sample(rng, ray, &intersection),
             }
         })
     }

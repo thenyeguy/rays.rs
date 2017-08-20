@@ -25,6 +25,7 @@ impl Renderer {
         let pixels: Vec<Vec<_>> = (0..self.width)
             .into_par_iter()
             .map(|i| {
+                let mut rng = rand::weak_rng();
                 (0..self.height)
                     .into_iter()
                     .map(|j| {
@@ -32,12 +33,12 @@ impl Renderer {
                         let y = (self.height / 2) as f32 - j as f32;
 
                         let mut color = palette::Rgb::new(0.0, 0.0, 0.0);
-                        let mut rng = rand::thread_rng();
                         for _ in 0..self.samples_per_pixel {
                             let dx = rng.next_f32() - 0.5;
                             let dy = rng.next_f32() - 0.5;
                             color = color +
                                     self.trace(scene,
+                                               &mut rng,
                                                camera.get_ray(x + dx, y + dy),
                                                0);
                         }
@@ -59,16 +60,21 @@ impl Renderer {
         image
     }
 
-    fn trace(&self, scene: &Scene, ray: Ray, reflections: u32) -> Rgb {
+    fn trace(&self,
+             scene: &Scene,
+             rng: &mut Rng,
+             ray: Ray,
+             reflections: u32)
+             -> Rgb {
         if reflections > self.max_reflections {
             return scene.global_illumination;
         }
 
-        match scene.sample(ray) {
+        match scene.sample(rng, ray) {
             Some(sample) => {
                 let reflected = match sample.reflection {
                     Some(Reflection { ray, intensity }) => {
-                        self.trace(scene, ray, reflections + 1) * intensity
+                        self.trace(scene, rng, ray, reflections + 1) * intensity
                     }
                     None => Rgb::new(0.0, 0.0, 0.0),
                 };
