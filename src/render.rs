@@ -22,31 +22,39 @@ impl Renderer {
     pub fn render(&self, scene: &Scene) -> RgbaImage {
         let camera = Camera::new(self.width, self.height, self.fov);
 
-        let pixels: Vec<_> = (0..self.width * self.height)
+        let pixels: Vec<Vec<_>> = (0..self.width)
             .into_par_iter()
-            .map(|n| {
-                let x = (n % self.width) as f32 - (self.width / 2) as f32;
-                let y = (self.height / 2) as f32 - (n / self.width) as f32;
+            .map(|i| {
+                (0..self.height)
+                    .into_iter()
+                    .map(|j| {
+                        let x = i as f32 - (self.width / 2) as f32;
+                        let y = (self.height / 2) as f32 - j as f32;
 
-                let mut color = palette::Rgb::new(0.0, 0.0, 0.0);
-                let mut rng = rand::thread_rng();
-                for _ in 0..self.samples_per_pixel {
-                    let dx = rng.next_f32() - 0.5;
-                    let dy = rng.next_f32() - 0.5;
-                    color =
-                        color +
-                        self.trace(scene, camera.get_ray(x + dx, y + dy), 0);
-                }
-                color = (color / self.samples_per_pixel as f32).clamp();
+                        let mut color = palette::Rgb::new(0.0, 0.0, 0.0);
+                        let mut rng = rand::thread_rng();
+                        for _ in 0..self.samples_per_pixel {
+                            let dx = rng.next_f32() - 0.5;
+                            let dy = rng.next_f32() - 0.5;
+                            color = color +
+                                    self.trace(scene,
+                                               camera.get_ray(x + dx, y + dy),
+                                               0);
+                        }
+                        color = (color / self.samples_per_pixel as f32).clamp();
 
-                let srgb = palette::pixel::Srgb::from(color);
-                image::Rgba(srgb.to_pixel())
+                        let srgb = palette::pixel::Srgb::from(color);
+                        image::Rgba(srgb.to_pixel())
+                    })
+                    .collect()
             })
             .collect();
 
         let mut image = ImageBuffer::new(self.width, self.height);
-        for n in 0..self.width * self.height {
-            image.put_pixel(n % self.width, n / self.width, pixels[n as usize]);
+        for i in 0..self.width {
+            for j in 0..self.height {
+                image.put_pixel(i, j, pixels[i as usize][j as usize]);
+            }
         }
         image
     }
