@@ -3,7 +3,14 @@ use presets::scene_builder::Color::*;
 use presets::scene_builder::Mat::*;
 use scene::Scene;
 
-pub fn sphere_room() -> Scene {
+pub fn by_name(name: &str) -> Option<Scene> {
+    match name {
+        "cornell_box" => Some(cornell_box()),
+        _ => None,
+    }
+}
+
+pub fn cornell_box() -> Scene {
     let xl = -10.0;
     let xh = 10.0;
     let yl = -8.0;
@@ -26,7 +33,7 @@ pub fn sphere_room() -> Scene {
         .sphere((4.0, -4.0, 30.0), 4.0, Diffuse(White))
         .quad(bbl, btl, btr, bbr, Diffuse(White))
         .quad(bbl, btl, ftl, fbl, Diffuse(Red))
-        .quad(bbr, btr, ftr, fbr, Diffuse(Blue))
+        .quad(bbr, btr, ftr, fbr, Diffuse(Green))
         .quad(bbl, bbr, fbr, fbl, Diffuse(White))
         .quad(btl, btr, ftr, ftl, Light(White))
         .build()

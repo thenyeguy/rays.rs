@@ -94,6 +94,7 @@ impl Into<Material> for Mat {
 #[derive(Copy, Clone, Debug)]
 pub enum Color {
     Blue,
+    Green,
     Red,
     White,
 }
@@ -101,7 +102,8 @@ impl Into<Rgb> for Color {
     fn into(self) -> Rgb {
         match self {
             Color::Blue => Rgb::new(0.1, 0.1, 1.0),
-            Color::Red => Rgb::new(1.0, 0.0, 0.0),
+            Color::Green => Rgb::new(0.1, 1.0, 0.1),
+            Color::Red => Rgb::new(1.0, 0.1, 0.1),
             Color::White => Rgb::new(1.0, 1.0, 1.0),
         }
     }

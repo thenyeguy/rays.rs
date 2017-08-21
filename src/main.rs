@@ -29,7 +29,8 @@ fn main() {
         (@arg reflections: --reflections +takes_value
             "maximum number of reflections per sample")
         (@arg scene: +required "the scene to render")
-    ).get_matches();
+    )
+        .get_matches();
 
     let renderer = Renderer {
         width: value_t!(args, "width", u32).unwrap_or(100),
@@ -40,9 +41,9 @@ fn main() {
     };
 
     let scene_name = args.value_of("scene").unwrap();
-    let scene = match scene_name {
-        "sphere_room" => scenes::sphere_room(),
-        _ => {
+    let scene = match scenes::by_name(scene_name) {
+        Some(scene) => scene,
+        None => {
             println!("Invalid scene name: {}", scene_name);
             std::process::exit(1);
         }
