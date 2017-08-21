@@ -5,7 +5,7 @@ use rayon::prelude::*;
 use std::f32;
 
 use camera::Camera;
-use material::Reflection;
+use material::Sample;
 use ray::Ray;
 use scene::Scene;
 
@@ -70,17 +70,13 @@ impl Renderer {
             return scene.global_illumination;
         }
 
-        match scene.sample(rng, ray) {
-            Some(sample) => {
-                let reflected = match sample.reflection {
-                    Some(Reflection { ray, intensity }) => {
-                        self.trace(scene, rng, ray, reflections + 1) * intensity
-                    }
-                    None => Rgb::new(0.0, 0.0, 0.0),
-                };
-                sample.color * (reflected + sample.emission)
+        scene.sample(rng, ray).map_or(scene.global_illumination, |sample| {
+            match sample {
+                Sample::Emit(color) => color,
+                Sample::Bounce(color, ray) => {
+                    color * self.trace(scene, rng, ray, reflections + 1)
+                }
             }
-            _ => scene.global_illumination,
-        }
+        })
     }
 }

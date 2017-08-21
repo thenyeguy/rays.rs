@@ -7,16 +7,9 @@ use ray::Ray;
 use surface::Intersection;
 
 #[derive(Copy, Clone, Debug)]
-pub struct Reflection {
-    pub ray: Ray,
-    pub intensity: f32,
-}
-
-#[derive(Copy, Clone, Debug)]
-pub struct Sample {
-    pub color: Rgb,
-    pub emission: f32,
-    pub reflection: Option<Reflection>,
+pub enum Sample {
+    Emit(Rgb),
+    Bounce(Rgb, Ray),
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -29,7 +22,6 @@ enum Kind {
 #[derive(Copy, Clone, Debug)]
 pub struct Material {
     color: Rgb,
-    emittance: f32,
     kind: Kind,
 }
 
@@ -37,7 +29,6 @@ impl Material {
     pub fn light(color: Rgb) -> Self {
         Material {
             color: color,
-            emittance: 1.0,
             kind: Kind::Emissive,
         }
     }
@@ -45,7 +36,6 @@ impl Material {
     pub fn diffuse(color: Rgb) -> Self {
         Material {
             color: color,
-            emittance: 0.0,
             kind: Kind::Diffuse,
         }
     }
@@ -53,14 +43,17 @@ impl Material {
     pub fn specular(color: Rgb) -> Self {
         Material {
             color: color,
-            emittance: 0.0,
             kind: Kind::Specular,
         }
     }
 
-    pub fn sample(&self, rng: &mut Rng, ray: Ray, int: &Intersection) -> Sample {
-        let reflection = match self.kind {
-            Kind::Emissive => None,
+    pub fn sample(&self,
+                  rng: &mut Rng,
+                  ray: Ray,
+                  int: &Intersection)
+                  -> Sample {
+        match self.kind {
+            Kind::Emissive => Sample::Emit(self.color),
             Kind::Diffuse => {
                 // Generate a random direction vector.
                 let theta = rng.next_f32() * 2.0 * PI;
@@ -71,31 +64,19 @@ impl Material {
                 // Ensure we sample only from a hemisphere
                 let intensity = dir.dot(&int.normal);
                 if intensity < 0.0 {
-                    Some(Reflection {
-                        ray: Ray::new(int.pos, -1.0 * dir),
-                        intensity: -intensity,
-                    })
+                    Sample::Bounce(self.color * -intensity,
+                                   Ray::new(int.pos, -1.0 * dir))
                 } else {
-                    Some(Reflection {
-                        ray: Ray::new(int.pos, dir),
-                        intensity: intensity,
-                    })
+                    Sample::Bounce(self.color * intensity,
+                                   Ray::new(int.pos, dir))
                 }
             }
             Kind::Specular => {
                 let ray_dir = ray.dir.as_ref();
                 let normal = int.normal.as_ref();
                 let dir = ray_dir - 2.0 * normal.dot(ray_dir) * normal;
-                Some(Reflection {
-                    ray: Ray::new(int.pos, dir),
-                    intensity: 1.0,
-                })
+                Sample::Bounce(self.color, Ray::new(int.pos, dir))
             }
-        };
-        Sample {
-            color: self.color,
-            emission: self.emittance,
-            reflection: reflection,
         }
     }
 }
