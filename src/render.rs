@@ -20,7 +20,7 @@ pub struct Renderer {
 
 impl Renderer {
     pub fn render(&self, scene: &Scene) -> RgbaImage {
-        let camera = Camera::new(self.width, self.height, self.fov);
+        let camera = Camera::new(scene.camera_ray, self.width, self.fov);
 
         let pixels: Vec<Vec<_>> = (0..self.width)
             .into_par_iter()

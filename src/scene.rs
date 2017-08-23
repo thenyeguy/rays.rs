@@ -9,6 +9,7 @@ use ray::Ray;
 pub struct Scene {
     pub objects: Vec<Object>,
     pub global_illumination: Rgb,
+    pub camera_ray: Ray,
 }
 
 impl Scene {

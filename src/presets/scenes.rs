@@ -13,10 +13,10 @@ pub fn by_name(name: &str) -> Option<Scene> {
 pub fn cornell_box() -> Scene {
     let xl = -10.0;
     let xh = 10.0;
-    let yl = -8.0;
-    let yh = 12.0;
-    let zl = 20.0;
-    let zh = 40.0;
+    let yl = 0.0;
+    let yh = 20.0;
+    let zl = 0.0;
+    let zh = 20.0;
 
     // {back,front}{bottom,top}{left,right} corners
     let bbl = (xl, yl, zh);
@@ -29,12 +29,13 @@ pub fn cornell_box() -> Scene {
     let ftr = (xh, yh, zl);
 
     SceneBuilder::new()
-        .sphere((-3.0, -5.0, 33.0), 3.0, Specular(White))
-        .sphere((4.0, -4.0, 30.0), 4.0, Diffuse(White))
+        .sphere((-3.0, 3.0, 13.0), 3.0, Specular(White))
+        .sphere((4.0, 4.0, 10.0), 4.0, Diffuse(White))
         .quad(bbl, btl, btr, bbr, Diffuse(White))
         .quad(bbl, btl, ftl, fbl, Diffuse(Red))
         .quad(bbr, btr, ftr, fbr, Diffuse(Green))
         .quad(bbl, bbr, fbr, fbl, Diffuse(White))
         .quad(btl, btr, ftr, ftl, Light(White))
+        .camera((0.0, 15.0, -20.0), (0.0, -0.2, 1.0))
         .build()
 }

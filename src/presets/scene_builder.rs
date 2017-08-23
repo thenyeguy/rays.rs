@@ -3,6 +3,7 @@ use palette::Rgb;
 
 use material::Material;
 use object::Object;
+use ray::Ray;
 use scene::Scene;
 use surface::*;
 
@@ -16,8 +17,17 @@ impl SceneBuilder {
             scene: Scene {
                 objects: Vec::new(),
                 global_illumination: Rgb::default(),
+                camera_ray: Ray::new(Point3::new(0.0, 0.0, 0.0),
+                                     Vector3::new(0.0, 0.0, 1.0)),
             },
         }
+    }
+
+    pub fn camera(mut self, pos: (f32, f32, f32), dir: (f32, f32, f32)) -> Self {
+        let pos = Point3::new(pos.0, pos.1, pos.2);
+        let dir = Vector3::new(dir.0, dir.1, dir.2);
+        self.scene.camera_ray = Ray::new(pos, dir);
+        self
     }
 
     pub fn global_illumination(mut self, color: Color, intensity: f32) -> Self {
