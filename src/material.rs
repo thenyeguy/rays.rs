@@ -72,9 +72,7 @@ impl Material {
                 }
             }
             Kind::Specular => {
-                let ray_dir = ray.dir.as_ref();
-                let normal = int.normal.as_ref();
-                let dir = ray_dir - 2.0 * normal.dot(ray_dir) * normal;
+                let dir = ray.dir - 2.0 * int.normal.dot(&ray.dir) * int.normal;
                 Sample::Bounce(self.color, Ray::new(int.pos, dir))
             }
         }

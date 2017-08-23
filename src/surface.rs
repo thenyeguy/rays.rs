@@ -1,4 +1,4 @@
-use nalgebra::{Point3, Unit, Vector3};
+use nalgebra::{Point3, Vector3};
 use std::fmt::Debug;
 
 use ray::Ray;
@@ -9,7 +9,7 @@ const EPSILON: f32 = 0.00001;
 pub struct Intersection {
     pub distance: f32,
     pub pos: Point3<f32>,
-    pub normal: Unit<Vector3<f32>>,
+    pub normal: Vector3<f32>,
 }
 
 pub trait Surface where Self: Debug {
@@ -20,14 +20,14 @@ pub trait Surface where Self: Debug {
 #[derive(Copy, Clone, Debug)]
 pub struct Plane {
     point: Point3<f32>,
-    normal: Unit<Vector3<f32>>,
+    normal: Vector3<f32>,
 }
 
 impl Plane {
     pub fn new(point: Point3<f32>, normal: Vector3<f32>) -> Self {
         Plane {
             point: point,
-            normal: Unit::new_normalize(normal),
+            normal: normal.normalize(),
         }
     }
 }
@@ -93,7 +93,7 @@ impl Surface for Sphere {
             Some(Intersection {
                 distance: distance,
                 pos: pos,
-                normal: Unit::new_normalize(pos - self.center),
+                normal: (pos - self.center).normalize(),
             })
         }
     }
@@ -105,7 +105,7 @@ pub struct Triangle {
     vertex: Point3<f32>,
     edge1: Vector3<f32>,
     edge2: Vector3<f32>,
-    normal: Unit<Vector3<f32>>,
+    normal: Vector3<f32>,
 }
 
 impl Triangle {
@@ -116,14 +116,14 @@ impl Triangle {
             vertex: vertices[0],
             edge1: e1,
             edge2: e2,
-            normal: Unit::new_normalize(e1.cross(&e2)),
+            normal: e1.cross(&e2).normalize(),
         }
     }
 }
 
 impl Surface for Triangle {
     fn intersect(&self, ray: Ray) -> Option<Intersection> {
-        let pvec = ray.dir.as_ref().cross(&self.edge2);
+        let pvec = ray.dir.cross(&self.edge2);
         let det = self.edge1.dot(&pvec);
         if det.abs() < EPSILON {
             // Ray is parallel to plane.
@@ -138,7 +138,7 @@ impl Surface for Triangle {
         }
 
         let qvec = tvec.cross(&self.edge1);
-        let v = qvec.dot(ray.dir.as_ref()) * inv_det;
+        let v = qvec.dot(&ray.dir) * inv_det;
         if v < 0.0 || (u + v) > 1.0 {
             return None;
         }
