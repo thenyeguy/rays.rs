@@ -49,14 +49,14 @@ fn main() {
         }
     };
 
-    let start = Instant::now();
-    let img = renderer.render(&scene);
-    print_time(start.elapsed());
-
     let output = format!("images/{}_{}x{}.png",
                          scene_name,
                          renderer.width,
                          renderer.height);
+
+    let start = Instant::now();
+    let img = renderer.render(&scene);
+    print_time(start.elapsed());
     match img.save(&output) {
         Ok(()) => println!("Wrote final image to: {}", output),
         Err(e) => {
