@@ -1,4 +1,4 @@
-use palette::Rgb;
+use palette::LinSrgb;
 use rand::Rng;
 
 use material::Sample;
@@ -8,7 +8,7 @@ use ray::Ray;
 #[derive(Debug)]
 pub struct Scene {
     pub objects: Vec<Object>,
-    pub global_illumination: Rgb,
+    pub global_illumination: LinSrgb,
     pub camera_ray: Ray,
 }
 

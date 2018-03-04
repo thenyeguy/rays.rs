@@ -1,5 +1,5 @@
 use nalgebra::Vector3;
-use palette::Rgb;
+use palette::LinSrgb;
 use rand::Rng;
 use std::f32::consts::PI;
 
@@ -8,8 +8,8 @@ use surface::Intersection;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Sample {
-    Emit(Rgb),
-    Bounce(Rgb, Ray),
+    Emit(LinSrgb),
+    Bounce(LinSrgb, Ray),
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -21,26 +21,26 @@ enum Kind {
 
 #[derive(Copy, Clone, Debug)]
 pub struct Material {
-    color: Rgb,
+    color: LinSrgb,
     kind: Kind,
 }
 
 impl Material {
-    pub fn light(color: Rgb) -> Self {
+    pub fn light(color: LinSrgb) -> Self {
         Material {
             color: color,
             kind: Kind::Emissive,
         }
     }
 
-    pub fn diffuse(color: Rgb) -> Self {
+    pub fn diffuse(color: LinSrgb) -> Self {
         Material {
             color: color,
             kind: Kind::Diffuse,
         }
     }
 
-    pub fn specular(color: Rgb) -> Self {
+    pub fn specular(color: LinSrgb) -> Self {
         Material {
             color: color,
             kind: Kind::Specular,

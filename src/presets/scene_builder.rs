@@ -1,5 +1,5 @@
 use nalgebra::{Point3, Vector3};
-use palette::Rgb;
+use palette::LinSrgb;
 
 use material::Material;
 use object::Object;
@@ -16,7 +16,7 @@ impl SceneBuilder {
         SceneBuilder {
             scene: Scene {
                 objects: Vec::new(),
-                global_illumination: Rgb::default(),
+                global_illumination: LinSrgb::default(),
                 camera_ray: Ray::new(Point3::new(0.0, 0.0, 0.0),
                                      Vector3::new(0.0, 0.0, 1.0)),
             },
@@ -31,7 +31,7 @@ impl SceneBuilder {
     }
 
     pub fn global_illumination(mut self, color: Color, intensity: f32) -> Self {
-        let color: Rgb = color.into();
+        let color: LinSrgb = color.into();
         self.scene.global_illumination = color * intensity;
         self
     }
@@ -108,13 +108,13 @@ pub enum Color {
     Red,
     White,
 }
-impl Into<Rgb> for Color {
-    fn into(self) -> Rgb {
+impl Into<LinSrgb> for Color {
+    fn into(self) -> LinSrgb {
         match self {
-            Color::Blue => Rgb::new(0.1, 0.1, 1.0),
-            Color::Green => Rgb::new(0.1, 1.0, 0.1),
-            Color::Red => Rgb::new(1.0, 0.1, 0.1),
-            Color::White => Rgb::new(1.0, 1.0, 1.0),
+            Color::Blue => LinSrgb::new(0.1, 0.1, 1.0),
+            Color::Green => LinSrgb::new(0.1, 1.0, 0.1),
+            Color::Red => LinSrgb::new(1.0, 0.1, 0.1),
+            Color::White => LinSrgb::new(1.0, 1.0, 1.0),
         }
     }
 }

@@ -4,10 +4,10 @@ version = "0.1.0"
 authors = ["Michael Nye <thenyeguy@gmail.com>"]
 
 [dependencies]
-clap = "2.20"
-image = "0.12"
-nalgebra = "0.13"
-num = "0.1"
-palette = "0.2"
-rand = "0.3"
-rayon = "0.8"
+clap = "2.30.0"
+image = "0.18.0"
+nalgebra = "0.14.0"
+num = "0.1.42"
+palette = "0.3.0"
+rand = "0.4.2"
+rayon = "1.0.0"
