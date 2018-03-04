@@ -18,9 +18,7 @@ impl Scene {
             .iter()
             .filter_map(|obj| obj.collide(rng, ray))
             .min_by(|left, right| {
-                left.distance
-                    .partial_cmp(&right.distance)
-                    .unwrap()
+                left.distance.partial_cmp(&right.distance).unwrap()
             })
             .map(|collision| collision.sample)
     }

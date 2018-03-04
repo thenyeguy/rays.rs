@@ -47,11 +47,12 @@ impl Material {
         }
     }
 
-    pub fn sample(&self,
-                  rng: &mut Rng,
-                  ray: Ray,
-                  int: &Intersection)
-                  -> Sample {
+    pub fn sample(
+        &self,
+        rng: &mut Rng,
+        ray: Ray,
+        int: &Intersection,
+    ) -> Sample {
         match self.kind {
             Kind::Emissive => Sample::Emit(self.color),
             Kind::Diffuse => {
@@ -64,11 +65,15 @@ impl Material {
                 // Ensure we sample only from a hemisphere
                 let intensity = dir.dot(&int.normal);
                 if intensity < 0.0 {
-                    Sample::Bounce(self.color * -intensity,
-                                   Ray::new(int.pos, -1.0 * dir))
+                    Sample::Bounce(
+                        self.color * -intensity,
+                        Ray::new(int.pos, -1.0 * dir),
+                    )
                 } else {
-                    Sample::Bounce(self.color * intensity,
-                                   Ray::new(int.pos, dir))
+                    Sample::Bounce(
+                        self.color * intensity,
+                        Ray::new(int.pos, dir),
+                    )
                 }
             }
             Kind::Specular => {

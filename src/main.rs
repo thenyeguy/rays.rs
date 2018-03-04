@@ -29,8 +29,7 @@ fn main() {
         (@arg reflections: --reflections +takes_value
             "maximum number of reflections per sample")
         (@arg scene: +required "the scene to render")
-    )
-        .get_matches();
+    ).get_matches();
 
     let renderer = Renderer {
         width: value_t!(args, "width", u32).unwrap_or(100),
@@ -49,10 +48,10 @@ fn main() {
         }
     };
 
-    let output = format!("images/{}_{}x{}.png",
-                         scene_name,
-                         renderer.width,
-                         renderer.height);
+    let output = format!(
+        "images/{}_{}x{}.png",
+        scene_name, renderer.width, renderer.height
+    );
 
     let start = Instant::now();
     let img = renderer.render(&scene);

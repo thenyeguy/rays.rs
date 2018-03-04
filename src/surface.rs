@@ -12,10 +12,12 @@ pub struct Intersection {
     pub normal: Vector3<f32>,
 }
 
-pub trait Surface where Self: Debug {
+pub trait Surface
+where
+    Self: Debug,
+{
     fn intersect(&self, ray: Ray) -> Option<Intersection>;
 }
-
 
 #[derive(Copy, Clone, Debug)]
 pub struct Plane {
@@ -55,7 +57,6 @@ impl Surface for Plane {
     }
 }
 
-
 #[derive(Copy, Clone, Debug)]
 pub struct Sphere {
     center: Point3<f32>,
@@ -75,8 +76,8 @@ impl Surface for Sphere {
     fn intersect(&self, ray: Ray) -> Option<Intersection> {
         // Find the discriminant
         let b = (ray.origin - self.center).dot(&ray.dir) * 2.0;
-        let c = (ray.origin - self.center).norm_squared() -
-                self.radius * self.radius;
+        let c = (ray.origin - self.center).norm_squared()
+            - self.radius * self.radius;
         let dis = b * b - 4.0 * c;
 
         // If the discriminant is negative, then no intersection exists.
@@ -98,7 +99,6 @@ impl Surface for Sphere {
         }
     }
 }
-
 
 #[derive(Copy, Clone, Debug)]
 pub struct Triangle {
@@ -151,7 +151,11 @@ impl Surface for Triangle {
         Some(Intersection {
             distance: dist,
             pos: ray.along(dist),
-            normal: if det > 0.0 { self.normal } else { -self.normal },
+            normal: if det > 0.0 {
+                self.normal
+            } else {
+                -self.normal
+            },
         })
     }
 }

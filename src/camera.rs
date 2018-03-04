@@ -16,8 +16,10 @@ impl Camera {
         assert!(0 < fov && fov < 180);
         Camera {
             origin: camera_ray.origin,
-            rotation: Rotation3::new_observer_frame(&camera_ray.dir,
-                                                    &Vector3::y_axis()),
+            rotation: Rotation3::new_observer_frame(
+                &camera_ray.dir,
+                &Vector3::y_axis(),
+            ),
             z: (width as f32 / 2.0) / (fov as f32 * PI / 180.0 / 2.0).tan(),
         }
     }

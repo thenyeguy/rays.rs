@@ -18,7 +18,8 @@ pub struct Object {
 
 impl Object {
     pub fn new<S>(surface: S, material: Material) -> Self
-        where S: 'static + Surface + Sync
+    where
+        S: 'static + Surface + Sync,
     {
         Object {
             surface: Box::new(surface),
@@ -27,11 +28,11 @@ impl Object {
     }
 
     pub fn collide(&self, rng: &mut Rng, ray: Ray) -> Option<Collision> {
-        self.surface.intersect(ray).map(|ref intersection| {
-            Collision {
+        self.surface
+            .intersect(ray)
+            .map(|ref intersection| Collision {
                 distance: intersection.distance,
                 sample: self.material.sample(rng, ray, &intersection),
-            }
-        })
+            })
     }
 }
