@@ -9,6 +9,10 @@ use material::Sample;
 use ray::Ray;
 use scene::Scene;
 
+pub trait RenderProgress: Sync {
+    fn on_row_done(&self);
+}
+
 #[derive(Clone, Debug)]
 pub struct Renderer {
     pub width: u32,
@@ -19,14 +23,17 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn render(&self, scene: &Scene) -> image::RgbImage {
+    pub fn render(
+        &self,
+        scene: &Scene,
+        progress: &RenderProgress,
+    ) -> image::RgbImage {
         let camera = Camera::new(scene.camera_ray, self.width, self.fov);
-
         let pixels: Vec<Vec<_>> = (0..self.width)
             .into_par_iter()
             .map(|i| {
                 let mut rng = rand::weak_rng();
-                (0..self.height)
+                let row = (0..self.height)
                     .into_iter()
                     .map(|j| {
                         let x = i as f32 - (self.width / 2) as f32;
@@ -47,7 +54,9 @@ impl Renderer {
                         color = (color / self.samples_per_pixel as f32).clamp();
                         palette::Srgb::linear_to_pixel(color)
                     })
-                    .collect()
+                    .collect();
+                progress.on_row_done();
+                row
             })
             .collect();
 

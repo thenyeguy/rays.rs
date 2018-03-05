@@ -1,23 +1,48 @@
 #[macro_use]
 extern crate clap;
 extern crate image;
+extern crate indicatif;
 extern crate nalgebra;
 extern crate palette;
 extern crate rays;
 
-fn print_time(duration: std::time::Duration) {
-    let secs = duration.as_secs();
-    let hours = secs / 3600;
-    let mins = (secs % 3600) / 60;
-    let secs = secs % 60;
-    println!("Rendering took: {}:{:02}:{:02}", hours, mins, secs);
+use indicatif::{ProgressBar, ProgressStyle};
+use rays::prelude::*;
+use std::error::Error;
+
+struct Logger {
+    progress_bar: ProgressBar,
+}
+
+impl Logger {
+    fn new(renderer: &Renderer) -> Self {
+        let progress_bar = ProgressBar::new(renderer.height as u64);
+        progress_bar.set_style(
+            ProgressStyle::default_bar()
+                .template("    [{elapsed_precise}] {wide_bar} {percent}%    "),
+        );
+        Logger {
+            progress_bar: progress_bar,
+        }
+    }
+
+    fn on_start(&self) {
+        println!("Rendering image...");
+        self.progress_bar.enable_steady_tick(100 /* ms */);
+    }
+
+    fn on_finish(&self) {
+        self.progress_bar.finish();
+    }
+}
+
+impl RenderProgress for Logger {
+    fn on_row_done(&self) {
+        self.progress_bar.inc(1);
+    }
 }
 
 fn main() {
-    use rays::prelude::*;
-    use std::error::Error;
-    use std::time::Instant;
-
     let args = clap_app!(rays =>
         (version: "0.1")
         (author: "Michael Nye <thenyeguy@gmail.com>")
@@ -53,9 +78,11 @@ fn main() {
         scene_name, renderer.width, renderer.height
     );
 
-    let start = Instant::now();
-    let img = renderer.render(&scene);
-    print_time(start.elapsed());
+    let logger = Logger::new(&renderer);
+    logger.on_start();
+    let img = renderer.render(&scene, &logger);
+    logger.on_finish();
+
     match img.save(&output) {
         Ok(()) => println!("Wrote final image to: {}", output),
         Err(e) => {
