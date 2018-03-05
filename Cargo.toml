@@ -5,6 +5,7 @@ authors = ["Michael Nye <thenyeguy@gmail.com>"]
 
 [dependencies]
 clap = "2.30.0"
+cpuprofiler = "0.0.3"
 image = "0.18.0"
 indicatif = "0.9.0"
 nalgebra = "0.14.0"

@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate clap;
+extern crate cpuprofiler;
 extern crate image;
 extern crate indicatif;
 extern crate nalgebra;
@@ -12,10 +13,11 @@ use std::error::Error;
 
 struct Logger {
     progress_bar: ProgressBar,
+    prof_file: String,
 }
 
 impl Logger {
-    fn new(renderer: &Renderer) -> Self {
+    fn new(renderer: &Renderer, prof_file: Option<&str>) -> Self {
         let progress_bar = ProgressBar::new(renderer.height as u64);
         progress_bar.set_style(
             ProgressStyle::default_bar()
@@ -23,16 +25,28 @@ impl Logger {
         );
         Logger {
             progress_bar: progress_bar,
+            prof_file: prof_file.map_or(String::new(), |s| s.into()),
         }
     }
 
     fn on_start(&self) {
         println!("Rendering image...");
         self.progress_bar.enable_steady_tick(100 /* ms */);
+        if !self.prof_file.is_empty() {
+            cpuprofiler::PROFILER
+                .lock()
+                .unwrap()
+                .start(self.prof_file.as_str())
+                .unwrap();
+        }
     }
 
     fn on_finish(&self) {
         self.progress_bar.finish();
+        if !self.prof_file.is_empty() {
+            cpuprofiler::PROFILER.lock().unwrap().stop().unwrap();
+            println!("Profile saved to: {}", self.prof_file);
+        }
     }
 }
 
@@ -53,6 +67,8 @@ fn main() {
         (@arg samples: --samples +takes_value "number of samples per pixel")
         (@arg reflections: --reflections +takes_value
             "maximum number of reflections per sample")
+        (@arg profile: --profile +takes_value
+            "the (optional) file to write profiling information to")
         (@arg scene: +required "the scene to render")
     ).get_matches();
 
@@ -63,6 +79,8 @@ fn main() {
         samples_per_pixel: value_t!(args, "samples", u32).unwrap_or(50),
         max_reflections: value_t!(args, "reflections", u32).unwrap_or(5),
     };
+
+    let profile = args.value_of("profile");
 
     let scene_name = args.value_of("scene").unwrap();
     let scene = match scenes::by_name(scene_name) {
@@ -78,7 +96,7 @@ fn main() {
         scene_name, renderer.width, renderer.height
     );
 
-    let logger = Logger::new(&renderer);
+    let logger = Logger::new(&renderer, profile);
     logger.on_start();
     let img = renderer.render(&scene, &logger);
     logger.on_finish();
