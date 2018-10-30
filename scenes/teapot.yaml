@@ -1,0 +1,22 @@
+camera:
+  pos: [0, 6, -8]
+  dir: [0, -.5, 1]
+
+objects:
+  - type: quadrilateral
+    vertices:
+      - [-7, 7, -7]
+      - [-7, 7,  7]
+      - [ 7, 7,  7]
+      - [ 7, 7, -7]
+    material: { type: light, color: [1, 1, 1] }
+  - type: quadrilateral
+    vertices:
+      - [-7, 0, -7]
+      - [-7, 0,  7]
+      - [ 7, 0,  7]
+      - [ 7, 0, -7]
+    material: { type: diffuse, color: [1, 1, 1] }
+  - type: wavefront
+    obj_file: obj/teapot.obj
+    material: { type: diffuse, color: [1, 1, 1] }

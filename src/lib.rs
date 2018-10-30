@@ -4,6 +4,7 @@ extern crate num;
 extern crate palette;
 extern crate rand;
 extern crate rayon;
+extern crate regex;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_yaml;
