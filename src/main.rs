@@ -3,8 +3,6 @@ extern crate clap;
 extern crate cpuprofiler;
 extern crate image;
 extern crate indicatif;
-extern crate nalgebra;
-extern crate palette;
 extern crate rays;
 
 use indicatif::{ProgressBar, ProgressStyle};
