@@ -1,0 +1,48 @@
+camera:
+  pos: [0, 15, -30]
+  dir: [0, -0.2, 1.0]
+
+objects:
+  - type: sphere
+    center: [-3, 3, 3]
+    radius: 3
+    material: { type: specular, color: [1, 1, 1] }
+  - type: sphere
+    center: [4, 4, 0]
+    radius: 4
+    material: { type: diffuse, color: [1, 1, 1] }
+  - type: quadrilateral
+    vertices:
+      - [-10, 0, -10]
+      - [-10, 0,  10]
+      - [ 10, 0,  10]
+      - [ 10, 0, -10]
+    material: { type: diffuse, color: [1, 1, 1] }
+  - type: quadrilateral
+    vertices:
+      - [-10, 20, 10]
+      - [-10,  0, 10]
+      - [ 10,  0, 10]
+      - [ 10, 20, 10]
+    material: { type: diffuse, color: [1, 1, 1] }
+  - type: quadrilateral
+    vertices:
+      - [-10,  0, -10]
+      - [-10, 20, -10]
+      - [-10, 20,  10]
+      - [-10,  0,  10]
+    material: { type: diffuse, color: [1, 0, 0] }
+  - type: quadrilateral
+    vertices:
+      - [10,  0, -10]
+      - [10, 20, -10]
+      - [10, 20,  10]
+      - [10,  0,  10]
+    material: { type: diffuse, color: [0, 1, 0] }
+  - type: quadrilateral
+    vertices:
+      - [-10, 20, -10]
+      - [-10, 20,  10]
+      - [ 10, 20,  10]
+      - [ 10, 20, -10]
+    material: { type: light, color: [1, 1, 1] }

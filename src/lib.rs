@@ -4,12 +4,15 @@ extern crate num;
 extern crate palette;
 extern crate rand;
 extern crate rayon;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_yaml;
 
 pub mod camera;
+pub mod loader;
 pub mod material;
 pub mod object;
 pub mod prelude;
-pub mod presets;
 pub mod ray;
 pub mod render;
 pub mod scene;

@@ -7,7 +7,6 @@ extern crate rays;
 
 use indicatif::{ProgressBar, ProgressStyle};
 use rays::prelude::*;
-use std::error::Error;
 
 struct Logger {
     progress_bar: ProgressBar,
@@ -68,6 +67,7 @@ fn main() {
         (@arg profile: --profile +takes_value
             "the (optional) file to write profiling information to")
         (@arg scene: +required "the scene to render")
+        (@arg output: +required "the output file")
     ).get_matches();
 
     let renderer = Renderer {
@@ -79,31 +79,22 @@ fn main() {
     };
 
     let profile = args.value_of("profile");
+    let scene_file = args.value_of("scene").unwrap();
+    let output = args.value_of("output").unwrap();
 
-    let scene_name = args.value_of("scene").unwrap();
-    let scene = match scenes::by_name(scene_name) {
-        Some(scene) => scene,
-        None => {
-            println!("Invalid scene name: {}", scene_name);
-            std::process::exit(1);
-        }
-    };
-
-    let output = format!(
-        "images/{}_{}x{}.png",
-        scene_name, renderer.width, renderer.height
-    );
+    let scene = load_scene(scene_file).unwrap_or_else(|e| {
+        println!("Error loading scene: {}", e);
+        std::process::exit(1);
+    });
 
     let logger = Logger::new(&renderer, profile);
     logger.on_start();
     let img = renderer.render(&scene, &logger);
     logger.on_finish();
 
-    match img.save(&output) {
-        Ok(()) => println!("Wrote final image to: {}", output),
-        Err(e) => {
-            println!("Could not write file: {}", e.description());
-            std::process::exit(1);
-        }
-    }
+    img.save(&output).unwrap_or_else(|e| {
+        println!("Could not write file: {}", e);
+        std::process::exit(1);
+    });
+    println!("Wrote final image to: {}", output);
 }
