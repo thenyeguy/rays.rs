@@ -47,9 +47,9 @@ impl Material {
         }
     }
 
-    pub fn sample(
+    pub fn sample<R: Rng + ?Sized>(
         &self,
-        rng: &mut Rng,
+        rng: &mut R,
         ray: Ray,
         int: &Intersection,
     ) -> Sample {
@@ -57,8 +57,8 @@ impl Material {
             Kind::Emissive => Sample::Emit(self.color),
             Kind::Diffuse => {
                 // Generate a random direction vector.
-                let theta = rng.next_f32() * 2.0 * PI;
-                let z: f32 = rng.next_f32();
+                let theta = rng.gen::<f32>() * 2.0 * PI;
+                let z = rng.gen::<f32>();
                 let zp = (1.0 - z * z).sqrt();
                 let dir = Vector3::new(zp * theta.cos(), zp * theta.sin(), z);
 

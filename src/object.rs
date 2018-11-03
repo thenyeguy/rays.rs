@@ -27,7 +27,11 @@ impl Object {
         }
     }
 
-    pub fn collide(&self, rng: &mut Rng, ray: Ray) -> Option<Collision> {
+    pub fn collide<R: Rng + ?Sized>(
+        &self,
+        rng: &mut R,
+        ray: Ray,
+    ) -> Option<Collision> {
         self.surface
             .intersect(ray)
             .map(|ref intersection| Collision {

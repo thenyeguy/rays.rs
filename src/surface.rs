@@ -151,11 +151,7 @@ impl Surface for Triangle {
         Some(Intersection {
             distance: dist,
             pos: ray.along(dist),
-            normal: if det > 0.0 {
-                self.normal
-            } else {
-                -self.normal
-            },
+            normal: if det > 0.0 { self.normal } else { -self.normal },
         })
     }
 }

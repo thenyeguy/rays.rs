@@ -1,6 +1,6 @@
-use presets::scene_builder::*;
 use presets::scene_builder::Color::*;
 use presets::scene_builder::Mat::*;
+use presets::scene_builder::*;
 use scene::Scene;
 
 pub fn by_name(name: &str) -> Option<Scene> {

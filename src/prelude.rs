@@ -1,3 +1,3 @@
 pub use presets::scenes;
-pub use render::{Renderer, RenderProgress};
+pub use render::{RenderProgress, Renderer};
 pub use scene::Scene;

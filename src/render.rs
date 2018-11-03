@@ -1,6 +1,6 @@
 use image;
-use palette::{self, Limited};
-use rand::{self, Rng};
+use palette::{self, Limited, Pixel};
+use rand::{self, FromEntropy, Rng};
 use rayon::prelude::*;
 use std::f32;
 
@@ -32,7 +32,7 @@ impl Renderer {
         let pixels: Vec<Vec<_>> = (0..self.width)
             .into_par_iter()
             .map(|i| {
-                let mut rng = rand::weak_rng();
+                let mut rng = rand::rngs::SmallRng::from_entropy();
                 let row = (0..self.height)
                     .into_iter()
                     .map(|j| {
@@ -41,24 +41,23 @@ impl Renderer {
 
                         let mut color = palette::LinSrgb::new(0.0, 0.0, 0.0);
                         for _ in 0..self.samples_per_pixel {
-                            let dx = rng.next_f32() - 0.5;
-                            let dy = rng.next_f32() - 0.5;
-                            color = color
-                                + self.trace(
-                                    scene,
-                                    &mut rng,
-                                    camera.get_ray(x + dx, y + dy),
-                                    0,
-                                );
+                            let dx = rng.gen::<f32>() - 0.5;
+                            let dy = rng.gen::<f32>() - 0.5;
+                            color = color + self.trace(
+                                scene,
+                                &mut rng,
+                                camera.get_ray(x + dx, y + dy),
+                                0,
+                            );
                         }
                         color = (color / self.samples_per_pixel as f32).clamp();
-                        palette::Srgb::linear_to_pixel(color)
-                    })
-                    .collect();
+                        palette::Srgb::from_linear(color)
+                            .into_format()
+                            .into_raw()
+                    }).collect();
                 progress.on_row_done();
                 row
-            })
-            .collect();
+            }).collect();
 
         let mut image = image::ImageBuffer::new(self.width, self.height);
         for i in 0..self.width {
@@ -73,10 +72,10 @@ impl Renderer {
         image
     }
 
-    fn trace(
+    fn trace<R: Rng + ?Sized>(
         &self,
         scene: &Scene,
-        rng: &mut Rng,
+        rng: &mut R,
         ray: Ray,
         reflections: u32,
     ) -> palette::LinSrgb {

@@ -13,13 +13,16 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn sample(&self, rng: &mut Rng, ray: Ray) -> Option<Sample> {
+    pub fn sample<R: Rng + ?Sized>(
+        &self,
+        rng: &mut R,
+        ray: Ray,
+    ) -> Option<Sample> {
         self.objects
             .iter()
             .filter_map(|obj| obj.collide(rng, ray))
             .min_by(|left, right| {
                 left.distance.partial_cmp(&right.distance).unwrap()
-            })
-            .map(|collision| collision.sample)
+            }).map(|collision| collision.sample)
     }
 }

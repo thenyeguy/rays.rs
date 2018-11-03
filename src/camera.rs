@@ -1,5 +1,5 @@
-use nalgebra::{Point3, Vector3};
 use nalgebra::geometry::Rotation3;
+use nalgebra::{Point3, Vector3};
 use std::f32::consts::PI;
 
 use ray::Ray;
