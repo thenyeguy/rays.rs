@@ -9,6 +9,7 @@ extern crate regex;
 extern crate serde_derive;
 extern crate serde_yaml;
 
+pub mod bounds;
 pub mod camera;
 pub mod float;
 pub mod loader;

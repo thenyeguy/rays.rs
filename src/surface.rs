@@ -1,6 +1,8 @@
 use nalgebra::{Point3, Vector3};
 use std::fmt::Debug;
 
+use bounds::BoundingBox;
+use float;
 use ray::Ray;
 
 const EPSILON: f32 = 0.00001;
@@ -13,6 +15,8 @@ pub struct Intersection {
 }
 
 pub trait Surface: Debug + Sync {
+    fn bounding_box(&self) -> BoundingBox;
+    fn centroid(&self) -> Point3<f32>;
     fn intersect(&self, ray: Ray) -> Option<Intersection>;
 }
 
@@ -32,6 +36,20 @@ impl Sphere {
 }
 
 impl Surface for Sphere {
+    fn bounding_box(&self) -> BoundingBox {
+        BoundingBox::axis_aligned(
+            self.center[0] - self.radius,
+            self.center[0] + self.radius,
+            self.center[1] - self.radius,
+            self.center[1] + self.radius,
+            self.center[2] - self.radius,
+            self.center[2] + self.radius)
+    }
+
+    fn centroid(&self) -> Point3<f32> {
+        self.center
+    }
+
     fn intersect(&self, ray: Ray) -> Option<Intersection> {
         // Find the discriminant
         let b = (ray.origin - self.center).dot(&ray.dir) * 2.0;
@@ -81,6 +99,20 @@ impl Triangle {
 }
 
 impl Surface for Triangle {
+    fn bounding_box(&self) -> BoundingBox {
+        let v1 = self.vertex;
+        let v2 = self.vertex + self.edge1;
+        let v3 = self.vertex + self.edge2;
+        let (xmin, xmax) = float_bounds(&[v1[0], v2[0], v3[0]]);
+        let (ymin, ymax) = float_bounds(&[v1[1], v2[1], v3[1]]);
+        let (zmin, zmax) = float_bounds(&[v1[2], v2[2], v3[2]]);
+        BoundingBox::axis_aligned(xmin, xmax, ymin, ymax, zmin, zmax)
+    }
+
+    fn centroid(&self) -> Point3<f32> {
+        self.vertex + (self.edge1 + self.edge2) / 3.0
+    }
+
     fn intersect(&self, ray: Ray) -> Option<Intersection> {
         let pvec = ray.dir.cross(&self.edge2);
         let det = self.edge1.dot(&pvec);
@@ -113,4 +145,10 @@ impl Surface for Triangle {
             normal: if det > 0.0 { self.normal } else { -self.normal },
         })
     }
+}
+
+fn float_bounds(fs: &[f32]) -> (f32, f32) {
+    let min = fs.iter().cloned().min_by(float::compare).unwrap();
+    let max = fs.iter().cloned().max_by(float::compare).unwrap();
+    (min, max)
 }
