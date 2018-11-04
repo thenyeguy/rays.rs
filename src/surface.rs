@@ -12,10 +12,7 @@ pub struct Intersection {
     pub normal: Vector3<f32>,
 }
 
-pub trait Surface
-where
-    Self: Debug,
-{
+pub trait Surface: Debug + Sync {
     fn intersect(&self, ray: Ray) -> Option<Intersection>;
 }
 

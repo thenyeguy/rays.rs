@@ -12,14 +12,14 @@ pub struct Collision {
 
 #[derive(Debug)]
 pub struct Object {
-    surface: Box<Surface + Sync>,
+    surface: Box<Surface>,
     material: Material,
 }
 
 impl Object {
     pub fn new<S>(surface: S, material: Material) -> Self
     where
-        S: 'static + Surface + Sync,
+        S: 'static + Surface,
     {
         Object {
             surface: Box::new(surface),
