@@ -1,6 +1,7 @@
 use palette::LinSrgb;
 use rand::Rng;
 
+use float;
 use material::Sample;
 use object::Object;
 use ray::Ray;
@@ -21,8 +22,8 @@ impl Scene {
         self.objects
             .iter()
             .filter_map(|obj| obj.collide(rng, ray))
-            .min_by(|left, right| {
-                left.distance.partial_cmp(&right.distance).unwrap()
-            }).map(|collision| collision.sample)
+            .min_by(|left, right|
+                    float::compare(&left.distance, &right.distance)
+            ).map(|collision| collision.sample)
     }
 }

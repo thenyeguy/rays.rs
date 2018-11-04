@@ -9,6 +9,7 @@ extern crate serde_derive;
 extern crate serde_yaml;
 
 pub mod camera;
+pub mod float;
 pub mod loader;
 pub mod material;
 pub mod object;
