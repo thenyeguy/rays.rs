@@ -77,7 +77,6 @@ struct ObjectPrototype {
 #[serde(rename_all = "lowercase")]
 enum SurfacePrototype {
     Sphere { center: [f32; 3], radius: f32 },
-    Plane { center: [f32; 3], normal: [f32; 3] },
     Triangle { vertices: [[f32; 3]; 3] },
     Quadrilateral { vertices: [[f32; 3]; 4] },
 }
@@ -88,9 +87,6 @@ impl Into<Vec<Object>> for ObjectPrototype {
         match self.surface {
             SurfacePrototype::Sphere { center, radius } => {
                 vec![Object::new(Sphere::new(center.into(), radius), mat)]
-            }
-            SurfacePrototype::Plane { center, normal } => {
-                vec![Object::new(Plane::new(center.into(), normal.into()), mat)]
             }
             SurfacePrototype::Triangle { vertices } => vec![Object::new(
                 Triangle::new([

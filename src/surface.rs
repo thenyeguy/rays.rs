@@ -17,44 +17,6 @@ pub trait Surface: Debug + Sync {
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct Plane {
-    point: Point3<f32>,
-    normal: Vector3<f32>,
-}
-
-impl Plane {
-    pub fn new(point: Point3<f32>, normal: Vector3<f32>) -> Self {
-        Plane {
-            point: point,
-            normal: normal.normalize(),
-        }
-    }
-}
-
-impl Surface for Plane {
-    fn intersect(&self, ray: Ray) -> Option<Intersection> {
-        let denom = self.normal.dot(&ray.dir);
-        if denom.abs() < EPSILON {
-            return None;
-        }
-        let distance = (self.point - ray.origin).dot(&self.normal) / denom;
-        if distance < EPSILON {
-            None
-        } else {
-            Some(Intersection {
-                distance: distance,
-                pos: ray.along(distance),
-                normal: if denom < 0.0 {
-                    self.normal
-                } else {
-                    -self.normal
-                },
-            })
-        }
-    }
-}
-
-#[derive(Copy, Clone, Debug)]
 pub struct Sphere {
     center: Point3<f32>,
     radius: f32,
