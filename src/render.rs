@@ -4,6 +4,7 @@ use rand::{self, FromEntropy, Rng};
 use rayon::prelude::*;
 use std::f32;
 
+use bounds::BoundingVolumeHierarchy;
 use camera::Camera;
 use material::Sample;
 use ray::Ray;
@@ -28,6 +29,7 @@ impl Renderer {
         scene: &Scene,
         progress: &RenderProgress,
     ) -> image::RgbImage {
+        let bvh = BoundingVolumeHierarchy::new(scene);
         let camera = Camera::new(scene.camera_ray, self.width, self.fov);
         let pixels: Vec<Vec<_>> = (0..self.width)
             .into_par_iter()
@@ -45,6 +47,7 @@ impl Renderer {
                             let dy = rng.gen::<f32>() - 0.5;
                             color = color + self.trace(
                                 scene,
+                                &bvh,
                                 &mut rng,
                                 camera.get_ray(x + dx, y + dy),
                                 0,
@@ -75,6 +78,7 @@ impl Renderer {
     fn trace<R: Rng + ?Sized>(
         &self,
         scene: &Scene,
+        bvh: &BoundingVolumeHierarchy,
         rng: &mut R,
         ray: Ray,
         reflections: u32,
@@ -83,12 +87,11 @@ impl Renderer {
             return scene.global_illumination;
         }
 
-        scene
-            .sample(rng, ray)
+        bvh.sample(rng, ray)
             .map_or(scene.global_illumination, |sample| match sample {
                 Sample::Emit(color) => color,
                 Sample::Bounce(color, ray) => {
-                    color * self.trace(scene, rng, ray, reflections + 1)
+                    color * self.trace(scene, bvh, rng, ray, reflections + 1)
                 }
             })
     }

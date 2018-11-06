@@ -22,8 +22,8 @@ impl Scene {
         self.objects
             .iter()
             .filter_map(|obj| obj.collide(rng, ray))
-            .min_by(|left, right|
-                    float::compare(&left.distance, &right.distance)
-            ).map(|collision| collision.sample)
+            .min_by(|left, right| {
+                float::compare(&left.distance, &right.distance)
+            }).map(|collision| collision.sample)
     }
 }

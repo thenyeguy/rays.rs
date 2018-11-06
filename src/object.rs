@@ -12,8 +12,8 @@ pub struct Collision {
 
 #[derive(Debug)]
 pub struct Object {
-    surface: Box<Surface>,
-    material: Material,
+    pub surface: Box<Surface>,
+    pub material: Material,
 }
 
 impl Object {

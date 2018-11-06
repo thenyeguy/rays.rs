@@ -1,7 +1,11 @@
 use nalgebra::Point3;
+use rand::Rng;
 
 use float;
+use material::Sample;
+use object::{Collision, Object};
 use ray::Ray;
+use scene::Scene;
 
 #[derive(Clone, Debug)]
 pub struct BoundingBox {
@@ -41,4 +45,120 @@ impl BoundingBox {
         }
         tmin <= tmax && tmax > 0.0
     }
+
+    fn merge(left: &Self, right: &Self) -> Self {
+        BoundingBox {
+            min: Point3::new(
+                float::min(left.min[0], right.min[0]),
+                float::min(left.min[1], right.min[1]),
+                float::min(left.min[2], right.min[2]),
+            ),
+            max: Point3::new(
+                float::max(left.max[0], right.max[0]),
+                float::max(left.max[1], right.max[1]),
+                float::max(left.max[2], right.max[2]),
+            ),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct BoundingVolumeHierarchy<'a> {
+    root: Box<BvhNode<'a>>,
+}
+
+impl<'a> BoundingVolumeHierarchy<'a> {
+    pub fn new(scene: &'a Scene) -> Self {
+        assert!(scene.objects.len() > 0);
+
+        let mut nodes = Vec::new();
+        for object in &scene.objects {
+            let node = Box::new(BvhNode::Leaf(object));
+            let centroid = object.surface.centroid();
+            let bounding_box = object.surface.bounding_box();
+            nodes.push((node, centroid, bounding_box));
+        }
+
+        while nodes.len() > 1 {
+            let mut new_nodes = Vec::new();
+            while nodes.len() > 1 {
+                let left = nodes.pop().unwrap();
+                let mut min_i = 0;
+                let mut min_dist = std::f32::INFINITY;
+                for i in 1..nodes.len() {
+                    let dist = (nodes[i].1 - left.1).norm_squared();
+                    if dist < min_dist {
+                        min_i = i;
+                        min_dist = dist;
+                    }
+                }
+                let right = nodes.swap_remove(min_i);
+                let new_box = BoundingBox::merge(&left.2, &right.2);
+                let new_centroid = point_mean(&left.1, &right.1);
+                let new_node =
+                    Box::new(BvhNode::Node(new_box.clone(), left.0, right.0));
+                new_nodes.push((new_node, new_centroid, new_box));
+            }
+            nodes.extend(new_nodes);
+        }
+
+        assert_eq!(nodes.len(), 1);
+        BoundingVolumeHierarchy {
+            root: nodes.remove(0).0,
+        }
+    }
+
+    pub fn sample<R: Rng + ?Sized>(
+        &self,
+        rng: &mut R,
+        ray: Ray,
+    ) -> Option<Sample> {
+        self.root.sample(rng, ray).map(|collision| collision.sample)
+    }
+}
+
+#[derive(Debug)]
+enum BvhNode<'a> {
+    Node(BoundingBox, Box<BvhNode<'a>>, Box<BvhNode<'a>>),
+    Leaf(&'a Object),
+}
+
+impl<'a> BvhNode<'a> {
+    fn sample<R: Rng + ?Sized>(
+        &self,
+        rng: &mut R,
+        ray: Ray,
+    ) -> Option<Collision> {
+        match self {
+            &BvhNode::Node(ref bb, ref left, ref right) => {
+                if bb.intersects(ray) {
+                    let left = left.sample(rng, ray);
+                    let right = right.sample(rng, ray);
+                    match (left, right) {
+                        (Some(lc), Some(rc)) => {
+                            if lc.distance < rc.distance {
+                                Some(lc)
+                            } else {
+                                Some(rc)
+                            }
+                        }
+                        (Some(c), _) => Some(c),
+                        (_, Some(c)) => Some(c),
+                        _ => None,
+                    }
+                } else {
+                    None
+                }
+            }
+            &BvhNode::Leaf(obj) => obj.collide(rng, ray),
+        }
+    }
+}
+
+fn point_mean(left: &Point3<f32>, right: &Point3<f32>) -> Point3<f32> {
+    Point3::new(
+        left[0] + right[0] / 2.0,
+        left[1] + right[1] / 2.0,
+        left[2] + right[2] / 2.0,
+    )
 }

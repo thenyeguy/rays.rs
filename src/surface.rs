@@ -43,7 +43,8 @@ impl Surface for Sphere {
             self.center[1] - self.radius,
             self.center[1] + self.radius,
             self.center[2] - self.radius,
-            self.center[2] + self.radius)
+            self.center[2] + self.radius,
+        )
     }
 
     fn centroid(&self) -> Point3<f32> {
