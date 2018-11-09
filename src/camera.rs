@@ -1,13 +1,12 @@
-use nalgebra::geometry::Rotation3;
-use nalgebra::{Point3, Vector3};
 use std::f32::consts::PI;
 
 use ray::Ray;
+use types::{Mat3, Point3, Vector3};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Camera {
-    origin: Point3<f32>,
-    rotation: Rotation3<f32>,
+    origin: Point3,
+    rotation: Mat3,
     z: f32,
 }
 
@@ -16,10 +15,7 @@ impl Camera {
         assert!(0 < fov && fov < 180);
         Camera {
             origin: camera_ray.origin,
-            rotation: Rotation3::new_observer_frame(
-                &camera_ray.dir,
-                &Vector3::y_axis(),
-            ),
+            rotation: make_rotation_matrix(&camera_ray.dir),
             z: (width as f32 / 2.0) / (fov as f32 * PI / 180.0 / 2.0).tan(),
         }
     }
@@ -29,4 +25,26 @@ impl Camera {
         // face down the camera ray.
         Ray::new(self.origin, self.rotation * Vector3::new(x, y, self.z))
     }
+}
+
+fn make_rotation_matrix(axis: &Vector3) -> Mat3 {
+    let mut pitch: f32 = axis.y.asin();
+    let mut yaw: f32 = axis.x.asin();
+    if axis.z > 0.0 {
+        pitch *= -1.0;
+    } else {
+        yaw = std::f32::consts::PI - yaw;
+    }
+
+    let pitch_mat = Mat3::new([
+        [1.0, 0.0, 0.0],
+        [0.0, pitch.cos(), -pitch.sin()],
+        [0.0, pitch.sin(), pitch.cos()],
+    ]);
+    let yaw_mat = Mat3::new([
+        [yaw.cos(), 0.0, yaw.sin()],
+        [0.0, 1.0, 0.0],
+        [-yaw.sin(), 0.0, yaw.cos()],
+    ]);
+    pitch_mat * yaw_mat
 }

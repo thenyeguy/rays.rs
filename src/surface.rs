@@ -1,33 +1,33 @@
-use nalgebra::{Point3, Vector3};
 use std::fmt::Debug;
 
 use bounds::BoundingBox;
 use float;
 use ray::Ray;
+use types::{Point3, Vector3};
 
 const EPSILON: f32 = 0.00001;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Intersection {
     pub distance: f32,
-    pub pos: Point3<f32>,
-    pub normal: Vector3<f32>,
+    pub pos: Point3,
+    pub normal: Vector3,
 }
 
 pub trait Surface: Debug + Sync {
     fn bounding_box(&self) -> BoundingBox;
-    fn centroid(&self) -> Point3<f32>;
+    fn centroid(&self) -> Point3;
     fn intersect(&self, ray: Ray) -> Option<Intersection>;
 }
 
 #[derive(Copy, Clone, Debug)]
 pub struct Sphere {
-    center: Point3<f32>,
+    center: Point3,
     radius: f32,
 }
 
 impl Sphere {
-    pub fn new(center: Point3<f32>, radius: f32) -> Self {
+    pub fn new(center: Point3, radius: f32) -> Self {
         Sphere {
             center: center,
             radius: radius,
@@ -38,22 +38,22 @@ impl Sphere {
 impl Surface for Sphere {
     fn bounding_box(&self) -> BoundingBox {
         BoundingBox::axis_aligned(
-            self.center[0] - self.radius,
-            self.center[0] + self.radius,
-            self.center[1] - self.radius,
-            self.center[1] + self.radius,
-            self.center[2] - self.radius,
-            self.center[2] + self.radius,
+            self.center.x - self.radius,
+            self.center.x + self.radius,
+            self.center.y - self.radius,
+            self.center.y + self.radius,
+            self.center.z - self.radius,
+            self.center.z + self.radius,
         )
     }
 
-    fn centroid(&self) -> Point3<f32> {
+    fn centroid(&self) -> Point3 {
         self.center
     }
 
     fn intersect(&self, ray: Ray) -> Option<Intersection> {
         // Find the discriminant
-        let b = (ray.origin - self.center).dot(&ray.dir) * 2.0;
+        let b = (ray.origin - self.center).dot(ray.dir) * 2.0;
         let c = (ray.origin - self.center).norm_squared()
             - self.radius * self.radius;
         let dis = b * b - 4.0 * c;
@@ -80,21 +80,21 @@ impl Surface for Sphere {
 
 #[derive(Copy, Clone, Debug)]
 pub struct Triangle {
-    vertex: Point3<f32>,
-    edge1: Vector3<f32>,
-    edge2: Vector3<f32>,
-    normal: Vector3<f32>,
+    vertex: Point3,
+    edge1: Vector3,
+    edge2: Vector3,
+    normal: Vector3,
 }
 
 impl Triangle {
-    pub fn new(vertices: [Point3<f32>; 3]) -> Self {
+    pub fn new(vertices: [Point3; 3]) -> Self {
         let e1 = vertices[1] - vertices[0];
         let e2 = vertices[2] - vertices[0];
         Triangle {
             vertex: vertices[0],
             edge1: e1,
             edge2: e2,
-            normal: e1.cross(&e2).normalize(),
+            normal: e1.cross(e2).normalize(),
         }
     }
 }
@@ -104,19 +104,19 @@ impl Surface for Triangle {
         let v1 = self.vertex;
         let v2 = self.vertex + self.edge1;
         let v3 = self.vertex + self.edge2;
-        let (xmin, xmax) = float_bounds(&[v1[0], v2[0], v3[0]]);
-        let (ymin, ymax) = float_bounds(&[v1[1], v2[1], v3[1]]);
-        let (zmin, zmax) = float_bounds(&[v1[2], v2[2], v3[2]]);
+        let (xmin, xmax) = float_bounds(&[v1.x, v2.x, v3.x]);
+        let (ymin, ymax) = float_bounds(&[v1.y, v2.y, v3.y]);
+        let (zmin, zmax) = float_bounds(&[v1.z, v2.z, v3.z]);
         BoundingBox::axis_aligned(xmin, xmax, ymin, ymax, zmin, zmax)
     }
 
-    fn centroid(&self) -> Point3<f32> {
+    fn centroid(&self) -> Point3 {
         self.vertex + (self.edge1 + self.edge2) / 3.0
     }
 
     fn intersect(&self, ray: Ray) -> Option<Intersection> {
-        let pvec = ray.dir.cross(&self.edge2);
-        let det = self.edge1.dot(&pvec);
+        let pvec = ray.dir.cross(self.edge2);
+        let det = self.edge1.dot(pvec);
         if det.abs() < EPSILON {
             // Ray is parallel to plane.
             return None;
@@ -124,18 +124,18 @@ impl Surface for Triangle {
         let inv_det = 1.0 / det;
 
         let tvec = ray.origin - self.vertex;
-        let u = tvec.dot(&pvec) * inv_det;
+        let u = tvec.dot(pvec) * inv_det;
         if u < 0.0 || u > 1.0 {
             return None;
         }
 
-        let qvec = tvec.cross(&self.edge1);
-        let v = qvec.dot(&ray.dir) * inv_det;
+        let qvec = tvec.cross(self.edge1);
+        let v = qvec.dot(ray.dir) * inv_det;
         if v < 0.0 || (u + v) > 1.0 {
             return None;
         }
 
-        let dist = self.edge2.dot(&qvec) * inv_det;
+        let dist = self.edge2.dot(qvec) * inv_det;
         if dist < EPSILON {
             return None;
         }

@@ -1,4 +1,3 @@
-use nalgebra::Point3;
 use rand::Rng;
 
 use float;
@@ -6,11 +5,12 @@ use material::Sample;
 use object::{Collision, Object};
 use ray::Ray;
 use scene::Scene;
+use types::Point3;
 
 #[derive(Clone, Debug)]
 pub struct BoundingBox {
-    min: Point3<f32>,
-    max: Point3<f32>,
+    min: Point3,
+    max: Point3,
 }
 
 impl BoundingBox {
@@ -49,14 +49,14 @@ impl BoundingBox {
     fn merge(left: &Self, right: &Self) -> Self {
         BoundingBox {
             min: Point3::new(
-                float::min(left.min[0], right.min[0]),
-                float::min(left.min[1], right.min[1]),
-                float::min(left.min[2], right.min[2]),
+                float::min(left.min.x, right.min.x),
+                float::min(left.min.y, right.min.y),
+                float::min(left.min.z, right.min.z),
             ),
             max: Point3::new(
-                float::max(left.max[0], right.max[0]),
-                float::max(left.max[1], right.max[1]),
-                float::max(left.max[2], right.max[2]),
+                float::max(left.max.x, right.max.x),
+                float::max(left.max.y, right.max.y),
+                float::max(left.max.z, right.max.z),
             ),
         }
     }
@@ -155,10 +155,10 @@ impl<'a> BvhNode<'a> {
     }
 }
 
-fn point_mean(left: &Point3<f32>, right: &Point3<f32>) -> Point3<f32> {
+fn point_mean(left: &Point3, right: &Point3) -> Point3 {
     Point3::new(
-        left[0] + right[0] / 2.0,
-        left[1] + right[1] / 2.0,
-        left[2] + right[2] / 2.0,
+        left.x + right.x / 2.0,
+        left.y + right.y / 2.0,
+        left.z + right.z / 2.0,
     )
 }

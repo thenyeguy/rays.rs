@@ -1,6 +1,4 @@
 extern crate image;
-extern crate nalgebra;
-extern crate num;
 extern crate palette;
 extern crate rand;
 extern crate rayon;
@@ -20,3 +18,4 @@ pub mod ray;
 pub mod render;
 pub mod scene;
 pub mod surface;
+pub mod types;

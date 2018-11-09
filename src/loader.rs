@@ -4,7 +4,6 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::path::Path;
 
-use nalgebra::Point3;
 use palette::LinSrgb;
 
 use material::Material;
@@ -13,6 +12,7 @@ use ray::Ray;
 use regex::Regex;
 use scene::Scene;
 use surface::*;
+use types::Point3;
 
 pub fn load_scene<P: AsRef<Path>>(path: P) -> Result<Scene, LoadError> {
     let file = File::open(path)?;
@@ -48,15 +48,15 @@ impl Into<Result<Scene, LoadError>> for ScenePrototype {
 
 #[derive(Debug, Deserialize)]
 struct CameraPrototype {
-    pos: [f32; 3],
-    dir: [f32; 3],
+    pos: (f32, f32, f32),
+    dir: (f32, f32, f32),
 }
 
 impl Default for CameraPrototype {
     fn default() -> Self {
         CameraPrototype {
-            pos: [0.0, 0.0, 0.0],
-            dir: [0.0, 0.0, 1.0],
+            pos: (0.0, 0.0, 0.0),
+            dir: (0.0, 0.0, 1.0),
         }
     }
 }
@@ -78,10 +78,19 @@ struct ObjectPrototype {
 #[serde(tag = "type")]
 #[serde(rename_all = "lowercase")]
 enum SurfacePrototype {
-    Sphere { center: [f32; 3], radius: f32 },
-    Triangle { vertices: [[f32; 3]; 3] },
-    Quadrilateral { vertices: [[f32; 3]; 4] },
-    Wavefront { obj_file: String },
+    Sphere {
+        center: (f32, f32, f32),
+        radius: f32,
+    },
+    Triangle {
+        vertices: [(f32, f32, f32); 3],
+    },
+    Quadrilateral {
+        vertices: [(f32, f32, f32); 4],
+    },
+    Wavefront {
+        obj_file: String,
+    },
 }
 
 impl Into<Result<Vec<Object>, LoadError>> for ObjectPrototype {
@@ -122,7 +131,7 @@ impl Into<Result<Vec<Object>, LoadError>> for ObjectPrototype {
 }
 
 fn load_object<P: AsRef<Path>>(path: P) -> io::Result<Vec<Triangle>> {
-    let mut vertices: Vec<Point3<f32>> = Vec::new();
+    let mut vertices: Vec<Point3> = Vec::new();
     let mut faces: Vec<(usize, usize, usize)> = Vec::new();
 
     let comment_re = Regex::new(r"^#").unwrap();

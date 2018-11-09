@@ -1,10 +1,10 @@
-use nalgebra::Vector3;
 use palette::LinSrgb;
 use rand::Rng;
 use std::f32::consts::PI;
 
 use ray::Ray;
 use surface::Intersection;
+use types::Vector3;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Sample {
@@ -63,7 +63,7 @@ impl Material {
                 let dir = Vector3::new(zp * theta.cos(), zp * theta.sin(), z);
 
                 // Ensure we sample only from a hemisphere
-                let intensity = dir.dot(&int.normal);
+                let intensity = dir.dot(int.normal);
                 if intensity < 0.0 {
                     Sample::Bounce(
                         self.color * -intensity,
@@ -77,7 +77,7 @@ impl Material {
                 }
             }
             Kind::Specular => {
-                let dir = ray.dir - 2.0 * int.normal.dot(&ray.dir) * int.normal;
+                let dir = ray.dir - 2.0 * int.normal.dot(ray.dir) * int.normal;
                 Sample::Bounce(self.color, Ray::new(int.pos, dir))
             }
         }
