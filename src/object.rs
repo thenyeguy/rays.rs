@@ -1,8 +1,8 @@
 use rand::Rng;
 
-use material::{Material, Sample};
-use ray::Ray;
-use surface::Surface;
+use crate::material::{Material, Sample};
+use crate::ray::Ray;
+use crate::surface::Surface;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Collision {
@@ -12,7 +12,7 @@ pub struct Collision {
 
 #[derive(Debug)]
 pub struct Object {
-    pub surface: Box<Surface>,
+    pub surface: Box<dyn Surface>,
     pub material: Material,
 }
 

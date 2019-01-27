@@ -1,11 +1,6 @@
-extern crate image;
-extern crate palette;
-extern crate rand;
-extern crate rayon;
-extern crate regex;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_yaml;
+use image;
+use palette;
+use rand;
 
 pub mod bounds;
 pub mod camera;

@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
-use ray::Ray;
-use types::{Mat3, Point3, Vector3};
+use crate::ray::Ray;
+use crate::types::{Mat3, Point3, Vector3};
 
 #[derive(Clone, Debug)]
 pub struct Camera {

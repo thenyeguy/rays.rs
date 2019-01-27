@@ -1,10 +1,10 @@
 use palette::LinSrgb;
 use rand::Rng;
 
-use float;
-use material::Sample;
-use object::Object;
-use ray::Ray;
+use crate::float;
+use crate::material::Sample;
+use crate::object::Object;
+use crate::ray::Ray;
 
 #[derive(Debug)]
 pub struct Scene {
@@ -24,6 +24,7 @@ impl Scene {
             .filter_map(|obj| obj.collide(rng, ray))
             .min_by(|left, right| {
                 float::compare(&left.distance, &right.distance)
-            }).map(|collision| collision.sample)
+            })
+            .map(|collision| collision.sample)
     }
 }

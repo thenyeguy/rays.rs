@@ -1,10 +1,5 @@
-#[macro_use]
-extern crate clap;
-extern crate cpuprofiler;
-extern crate image;
-extern crate indicatif;
-extern crate rays;
-
+use clap::{clap_app, value_t};
+use cpuprofiler;
 use indicatif::{ProgressBar, ProgressStyle};
 use rays::prelude::*;
 
@@ -68,7 +63,8 @@ fn main() {
             "the (optional) file to write profiling information to")
         (@arg scene: +required "the scene to render")
         (@arg output: +required "the output file")
-    ).get_matches();
+    )
+    .get_matches();
 
     let renderer = Renderer {
         width: value_t!(args, "width", u32).unwrap_or(100),

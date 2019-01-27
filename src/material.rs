@@ -2,9 +2,9 @@ use palette::LinSrgb;
 use rand::Rng;
 use std::f32::consts::PI;
 
-use ray::Ray;
-use surface::Intersection;
-use types::Vector3;
+use crate::ray::Ray;
+use crate::surface::Intersection;
+use crate::types::Vector3;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Sample {

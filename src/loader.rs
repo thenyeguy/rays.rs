@@ -5,14 +5,15 @@ use std::io::{self, BufRead, BufReader};
 use std::path::Path;
 
 use palette::LinSrgb;
-
-use material::Material;
-use object::Object;
-use ray::Ray;
 use regex::Regex;
-use scene::Scene;
-use surface::*;
-use types::Point3;
+use serde::Deserialize;
+
+use crate::material::Material;
+use crate::object::Object;
+use crate::ray::Ray;
+use crate::scene::Scene;
+use crate::surface::*;
+use crate::types::Point3;
 
 pub fn load_scene<P: AsRef<Path>>(path: P) -> Result<Scene, LoadError> {
     let file = File::open(path)?;
@@ -139,9 +140,9 @@ fn load_object<P: AsRef<Path>>(path: P) -> io::Result<Vec<Triangle>> {
     let vertex_re = Regex::new(r"^v +(\S+) +(\S+) +(\S+)").unwrap();
     let face_re = Regex::new(r"^f +(\d+) +(\d+) +(\d+)").unwrap();
 
-    let file = try!(File::open(path.as_ref()));
+    let file = r#try!(File::open(path.as_ref()));
     for line in BufReader::new(&file).lines() {
-        let line = try!(line);
+        let line = r#try!(line);
         if line.is_empty() {
             continue;
         }
@@ -221,7 +222,7 @@ impl From<serde_yaml::Error> for LoadError {
 }
 
 impl fmt::Display for LoadError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             LoadError::Io(ref err) => write!(f, "IO error: {}", err),
             LoadError::Yaml(ref err) => write!(f, "Yaml error: {}", err),
@@ -230,7 +231,7 @@ impl fmt::Display for LoadError {
 }
 
 impl error::Error for LoadError {
-    fn cause(&self) -> Option<&error::Error> {
+    fn cause(&self) -> Option<&dyn error::Error> {
         match *self {
             LoadError::Io(ref err) => Some(err),
             LoadError::Yaml(ref err) => Some(err),

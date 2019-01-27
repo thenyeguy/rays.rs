@@ -1,4 +1,4 @@
-use types::{Point3, Vector3};
+use crate::types::{Point3, Vector3};
 
 #[derive(Copy, Clone, Debug)]
 pub struct Ray {

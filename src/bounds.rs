@@ -1,11 +1,11 @@
 use rand::Rng;
 
-use float;
-use material::Sample;
-use object::{Collision, Object};
-use ray::Ray;
-use scene::Scene;
-use types::Point3;
+use crate::float;
+use crate::material::Sample;
+use crate::object::{Collision, Object};
+use crate::ray::Ray;
+use crate::scene::Scene;
+use crate::types::Point3;
 
 #[derive(Clone, Debug)]
 pub struct BoundingBox {

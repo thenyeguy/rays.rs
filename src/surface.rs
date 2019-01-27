@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 
-use bounds::BoundingBox;
-use float;
-use ray::Ray;
-use types::{Point3, Vector3};
+use crate::bounds::BoundingBox;
+use crate::float;
+use crate::ray::Ray;
+use crate::types::{Point3, Vector3};
 
 const EPSILON: f32 = 0.00001;
 

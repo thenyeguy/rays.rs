@@ -4,11 +4,11 @@ use rand::{self, FromEntropy, Rng};
 use rayon::prelude::*;
 use std::f32;
 
-use bounds::BoundingVolumeHierarchy;
-use camera::Camera;
-use material::Sample;
-use ray::Ray;
-use scene::Scene;
+use crate::bounds::BoundingVolumeHierarchy;
+use crate::camera::Camera;
+use crate::material::Sample;
+use crate::ray::Ray;
+use crate::scene::Scene;
 
 pub trait RenderProgress: Sync {
     fn on_row_done(&self);
@@ -27,7 +27,7 @@ impl Renderer {
     pub fn render(
         &self,
         scene: &Scene,
-        progress: &RenderProgress,
+        progress: &dyn RenderProgress,
     ) -> image::RgbImage {
         let bvh = BoundingVolumeHierarchy::new(scene);
         let camera = Camera::new(scene.camera_ray, self.width, self.fov);
@@ -45,22 +45,25 @@ impl Renderer {
                         for _ in 0..self.samples_per_pixel {
                             let dx = rng.gen::<f32>() - 0.5;
                             let dy = rng.gen::<f32>() - 0.5;
-                            color = color + self.trace(
-                                scene,
-                                &bvh,
-                                &mut rng,
-                                camera.get_ray(x + dx, y + dy),
-                                0,
-                            );
+                            color = color
+                                + self.trace(
+                                    scene,
+                                    &bvh,
+                                    &mut rng,
+                                    camera.get_ray(x + dx, y + dy),
+                                    0,
+                                );
                         }
                         color = (color / self.samples_per_pixel as f32).clamp();
                         palette::Srgb::from_linear(color)
                             .into_format()
                             .into_raw()
-                    }).collect();
+                    })
+                    .collect();
                 progress.on_row_done();
                 row
-            }).collect();
+            })
+            .collect();
 
         let mut image = image::ImageBuffer::new(self.width, self.height);
         for i in 0..self.width {
@@ -78,7 +81,7 @@ impl Renderer {
     fn trace<R: Rng + ?Sized>(
         &self,
         scene: &Scene,
-        bvh: &BoundingVolumeHierarchy,
+        bvh: &BoundingVolumeHierarchy<'_>,
         rng: &mut R,
         ray: Ray,
         reflections: u32,
