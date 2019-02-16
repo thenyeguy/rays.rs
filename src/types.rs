@@ -1,20 +1,21 @@
+use std::fmt;
 use std::ops::{Add, Div, Index, Mul, Neg, Sub};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 pub struct Vector3 {
     pub x: f32,
     pub y: f32,
     pub z: f32,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 pub struct Point3 {
     pub x: f32,
     pub y: f32,
     pub z: f32,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 pub struct Mat3 {
     values: [[f32; 3]; 3],
 }
@@ -109,6 +110,12 @@ impl Mul<Vector3> for f32 {
     }
 }
 
+impl fmt::Debug for Vector3 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "<{}, {}, {}>", self.x, self.y, self.z)
+    }
+}
+
 impl Point3 {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Point3 { x: x, y: y, z: z }
@@ -154,6 +161,12 @@ impl Sub<Point3> for Point3 {
     }
 }
 
+impl fmt::Debug for Point3 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {}, {})", self.x, self.y, self.z)
+    }
+}
+
 impl Mat3 {
     pub fn new(values: [[f32; 3]; 3]) -> Self {
         Mat3 { values: values }
@@ -190,5 +203,24 @@ impl Mul<Vector3> for Mat3 {
             self[(1, 0)] * v.x + self[(1, 1)] * v.y + self[(1, 2)] * v.z,
             self[(2, 0)] * v.x + self[(2, 1)] * v.y + self[(2, 2)] * v.z,
         )
+    }
+}
+
+impl fmt::Debug for Mat3 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let sep = if f.alternate() { "\n  " } else { "; " };
+        write!(f, "[")?;
+        if f.alternate() {
+            write!(f, "{}", sep)?;
+        }
+        write!(f, "{} {} {}", self[(0, 0)], self[(0, 1)], self[(0, 2)])?;
+        write!(f, "{}", sep)?;
+        write!(f, "{} {} {}", self[(1, 0)], self[(1, 1)], self[(1, 2)],)?;
+        write!(f, "{}", sep)?;
+        write!(f, "{} {} {}", self[(2, 0)], self[(2, 1)], self[(2, 2)])?;
+        if f.alternate() {
+            write!(f, "\n")?;
+        }
+        write!(f, "]")
     }
 }
