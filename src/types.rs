@@ -3,16 +3,16 @@ use std::ops::{Add, Div, Index, Mul, Neg, Sub};
 
 #[derive(Copy, Clone)]
 pub struct Vector3 {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
+    x: f32,
+    y: f32,
+    z: f32,
 }
 
 #[derive(Copy, Clone)]
 pub struct Point3 {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
+    x: f32,
+    y: f32,
+    z: f32,
 }
 
 #[derive(Copy, Clone)]
@@ -23,6 +23,18 @@ pub struct Mat3 {
 impl Vector3 {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Vector3 { x: x, y: y, z: z }
+    }
+
+    pub fn x(&self) -> f32 {
+        self.x
+    }
+
+    pub fn y(&self) -> f32 {
+        self.y
+    }
+
+    pub fn z(&self) -> f32 {
+        self.z
     }
 
     pub fn norm_squared(self) -> f32 {
@@ -119,6 +131,18 @@ impl fmt::Debug for Vector3 {
 impl Point3 {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Point3 { x: x, y: y, z: z }
+    }
+
+    pub fn x(&self) -> f32 {
+        self.x
+    }
+
+    pub fn y(&self) -> f32 {
+        self.y
+    }
+
+    pub fn z(&self) -> f32 {
+        self.z
     }
 }
 

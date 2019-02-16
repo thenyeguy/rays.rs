@@ -38,12 +38,12 @@ impl Sphere {
 impl Surface for Sphere {
     fn bounding_box(&self) -> BoundingBox {
         BoundingBox::axis_aligned(
-            self.center.x - self.radius,
-            self.center.x + self.radius,
-            self.center.y - self.radius,
-            self.center.y + self.radius,
-            self.center.z - self.radius,
-            self.center.z + self.radius,
+            self.center.x() - self.radius,
+            self.center.x() + self.radius,
+            self.center.y() - self.radius,
+            self.center.y() + self.radius,
+            self.center.z() - self.radius,
+            self.center.z() + self.radius,
         )
     }
 
@@ -104,9 +104,9 @@ impl Surface for Triangle {
         let v1 = self.vertex;
         let v2 = self.vertex + self.edge1;
         let v3 = self.vertex + self.edge2;
-        let (xmin, xmax) = float_bounds(&[v1.x, v2.x, v3.x]);
-        let (ymin, ymax) = float_bounds(&[v1.y, v2.y, v3.y]);
-        let (zmin, zmax) = float_bounds(&[v1.z, v2.z, v3.z]);
+        let (xmin, xmax) = float_bounds(&[v1.x(), v2.x(), v3.x()]);
+        let (ymin, ymax) = float_bounds(&[v1.y(), v2.y(), v3.y()]);
+        let (zmin, zmax) = float_bounds(&[v1.z(), v2.z(), v3.z()]);
         BoundingBox::axis_aligned(xmin, xmax, ymin, ymax, zmin, zmax)
     }
 

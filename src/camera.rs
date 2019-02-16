@@ -28,9 +28,9 @@ impl Camera {
 }
 
 fn make_rotation_matrix(axis: &Vector3) -> Mat3 {
-    let mut pitch: f32 = axis.y.asin();
-    let mut yaw: f32 = axis.x.asin();
-    if axis.z > 0.0 {
+    let mut pitch: f32 = axis.y().asin();
+    let mut yaw: f32 = axis.x().asin();
+    if axis.z() > 0.0 {
         pitch *= -1.0;
     } else {
         yaw = std::f32::consts::PI - yaw;

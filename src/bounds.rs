@@ -49,14 +49,14 @@ impl BoundingBox {
     fn merge(left: &Self, right: &Self) -> Self {
         BoundingBox {
             min: Point3::new(
-                float::min(left.min.x, right.min.x),
-                float::min(left.min.y, right.min.y),
-                float::min(left.min.z, right.min.z),
+                float::min(left.min.x(), right.min.x()),
+                float::min(left.min.y(), right.min.y()),
+                float::min(left.min.z(), right.min.z()),
             ),
             max: Point3::new(
-                float::max(left.max.x, right.max.x),
-                float::max(left.max.y, right.max.y),
-                float::max(left.max.z, right.max.z),
+                float::max(left.max.x(), right.max.x()),
+                float::max(left.max.y(), right.max.y()),
+                float::max(left.max.z(), right.max.z()),
             ),
         }
     }
@@ -157,8 +157,8 @@ impl<'a> BvhNode<'a> {
 
 fn point_mean(left: &Point3, right: &Point3) -> Point3 {
     Point3::new(
-        left.x + right.x / 2.0,
-        left.y + right.y / 2.0,
-        left.z + right.z / 2.0,
+        left.x() + right.x() / 2.0,
+        left.y() + right.y() / 2.0,
+        left.z() + right.z() / 2.0,
     )
 }
