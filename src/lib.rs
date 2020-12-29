@@ -1,7 +1,3 @@
-use image;
-use palette;
-use rand;
-
 pub mod bounds;
 pub mod camera;
 pub mod float;

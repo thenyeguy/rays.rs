@@ -140,9 +140,9 @@ fn load_object<P: AsRef<Path>>(path: P) -> io::Result<Vec<Triangle>> {
     let vertex_re = Regex::new(r"^v +(\S+) +(\S+) +(\S+)").unwrap();
     let face_re = Regex::new(r"^f +(\d+) +(\d+) +(\d+)").unwrap();
 
-    let file = r#try!(File::open(path.as_ref()));
+    let file = File::open(path.as_ref())?;
     for line in BufReader::new(&file).lines() {
-        let line = r#try!(line);
+        let line = line?;
         if line.is_empty() {
             continue;
         }
