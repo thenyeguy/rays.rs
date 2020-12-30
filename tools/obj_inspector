@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+
+import os
+import re
+import sys
+
+
+face_re = re.compile(r"^f ")
+group_re = re.compile(r"^g +(\w+)")
+material_re = re.compile(r"^usemtl +(\w+)")
+vertex_re = re.compile(r"^v +(\S+) +(\S+) +(\S+)")
+
+
+def new_bounds(bounds, vertex):
+    return [tuple(min(b, v) for v, b in zip(vertex, bounds[0])),
+            tuple(max(b, v) for v, b in zip(vertex, bounds[1]))]
+
+
+class Object(object):
+    @classmethod
+    def load(obj, filename):
+        self = obj(os.path.basename(filename))
+        with open(filename, "r") as f:
+            for line in f:
+                if match := vertex_re.match(line):
+                    vertex = tuple(float(b) for b in match.groups())
+                    self.bounds = new_bounds(self.bounds, vertex)
+                elif match := group_re.match(line):
+                    self.groups.append(match.group(1))
+                elif match := face_re.match(line):
+                    self.faces += 1
+                elif match := material_re.match(line):
+                    self.materials.append(match.group(1))
+        return self
+
+    def __init__(self, name):
+        self.name = name
+        self.bounds = [(0, 0, 0), (0, 0, 0)]
+        self.faces = 0
+        self.groups = []
+        self.materials = []
+
+    def print_summary(self):
+        print("{}:".format(self.name))
+        print("  faces: ", self.faces)
+        print("  bounds:", *self.bounds)
+        print("  groups:", self.groups)
+        print("  materials:", self.materials)
+
+
+def main(argv):
+    if len(argv) == 2:
+        filename = argv[1]
+    else:
+        raise Exception("Missing obj file")
+
+    obj_file = Object.load(filename)
+    obj_file.print_summary()
+
+
+if __name__ == "__main__":
+    try:
+        main(sys.argv)
+    except Exception as e:
+        print("Inspection failed:", e)
+        sys.exit(1)
