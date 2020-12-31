@@ -71,7 +71,6 @@ impl Into<Ray> for CameraPrototype {
 struct ObjectPrototype {
     #[serde(flatten)]
     surface: SurfacePrototype,
-    material: MaterialPrototype,
 }
 
 #[derive(Debug, Deserialize)]
@@ -81,12 +80,15 @@ enum SurfacePrototype {
     Sphere {
         center: (f32, f32, f32),
         radius: f32,
+        material: MaterialPrototype,
     },
     Triangle {
         vertices: [(f32, f32, f32); 3],
+        material: MaterialPrototype,
     },
     Quadrilateral {
         vertices: [(f32, f32, f32); 4],
+        material: MaterialPrototype,
     },
     Wavefront {
         obj_file: String,
@@ -95,35 +97,41 @@ enum SurfacePrototype {
 
 impl Into<Result<Vec<Object>, LoadError>> for ObjectPrototype {
     fn into(self) -> Result<Vec<Object>, LoadError> {
-        let mat: Material = self.material.into();
         let mut objects = Vec::new();
         match self.surface {
-            SurfacePrototype::Sphere { center, radius } => {
-                objects
-                    .push(Object::new(Sphere::new(center.into(), radius), mat));
+            SurfacePrototype::Sphere {
+                center,
+                radius,
+                material,
+            } => {
+                objects.push(Object::new(
+                    Sphere::new(center.into(), radius),
+                    material.into(),
+                ));
             }
-            SurfacePrototype::Triangle { vertices } => {
+            SurfacePrototype::Triangle { vertices, material } => {
                 objects.push(Object::new(
                     Triangle::new([
                         vertices[0].into(),
                         vertices[1].into(),
                         vertices[2].into(),
                     ]),
-                    mat,
+                    material.into(),
                 ));
             }
-            SurfacePrototype::Quadrilateral { vertices } => {
+            SurfacePrototype::Quadrilateral { vertices, material } => {
                 let v0 = vertices[0].into();
                 let v1 = vertices[1].into();
                 let v2 = vertices[2].into();
                 let v3 = vertices[3].into();
+                let mat = material.into();
                 objects.push(Object::new(Triangle::new([v0, v1, v2]), mat));
                 objects.push(Object::new(Triangle::new([v0, v2, v3]), mat));
             }
             SurfacePrototype::Wavefront { obj_file } => {
-                let object = WavefrontObject::from_path(obj_file)?;
-                for face in object.faces {
-                    objects.push(Object::new(Triangle::new(face), mat));
+                let wavefront_object = WavefrontObject::from_path(obj_file)?;
+                for object in wavefront_object.into_objects() {
+                    objects.push(object);
                 }
             }
         }
