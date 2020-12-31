@@ -28,21 +28,21 @@ pub struct Material {
 impl Material {
     pub fn light(color: LinSrgb) -> Self {
         Material {
-            color: color,
+            color,
             kind: Kind::Emissive,
         }
     }
 
     pub fn diffuse(color: LinSrgb) -> Self {
         Material {
-            color: color,
+            color,
             kind: Kind::Diffuse,
         }
     }
 
     pub fn specular(color: LinSrgb) -> Self {
         Material {
-            color: color,
+            color,
             kind: Kind::Specular,
         }
     }

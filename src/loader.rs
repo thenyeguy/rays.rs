@@ -41,7 +41,7 @@ impl Into<Result<Scene, LoadError>> for ScenePrototype {
                 self.global_illumination,
             ),
             camera_ray: self.camera.into(),
-            objects: objects,
+            objects,
         })
     }
 }

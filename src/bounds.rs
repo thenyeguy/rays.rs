@@ -69,7 +69,7 @@ pub struct BoundingVolumeHierarchy<'a> {
 
 impl<'a> BoundingVolumeHierarchy<'a> {
     pub fn new(scene: &'a Scene) -> Self {
-        assert!(scene.objects.len() > 0);
+        assert!(!scene.objects.is_empty());
 
         let mut nodes = Vec::new();
         for object in &scene.objects {
@@ -85,8 +85,8 @@ impl<'a> BoundingVolumeHierarchy<'a> {
                 let left = nodes.pop().unwrap();
                 let mut min_i = 0;
                 let mut min_dist = std::f32::INFINITY;
-                for i in 1..nodes.len() {
-                    let dist = (nodes[i].1 - left.1).norm_squared();
+                for (i, node) in nodes.iter().enumerate().skip(1) {
+                    let dist = (node.1 - left.1).norm_squared();
                     if dist < min_dist {
                         min_i = i;
                         min_dist = dist;
@@ -129,8 +129,8 @@ impl<'a> BvhNode<'a> {
         rng: &mut R,
         ray: Ray,
     ) -> Option<Collision> {
-        match self {
-            &BvhNode::Node(ref bb, ref left, ref right) => {
+        match *self {
+            BvhNode::Node(ref bb, ref left, ref right) => {
                 if bb.intersects(ray) {
                     let left = left.sample(rng, ray);
                     let right = right.sample(rng, ray);
@@ -150,7 +150,7 @@ impl<'a> BvhNode<'a> {
                     None
                 }
             }
-            &BvhNode::Leaf(obj) => obj.collide(rng, ray),
+            BvhNode::Leaf(obj) => obj.collide(rng, ray),
         }
     }
 }

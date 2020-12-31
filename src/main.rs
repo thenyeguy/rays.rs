@@ -1,5 +1,4 @@
 use clap::{clap_app, value_t};
-use cpuprofiler;
 use indicatif::{ProgressBar, ProgressStyle};
 use rays::prelude::*;
 
@@ -16,7 +15,7 @@ impl Logger {
                 .template("    [{elapsed_precise}] {wide_bar} {percent}%    "),
         );
         Logger {
-            progress_bar: progress_bar,
+            progress_bar,
             prof_file: prof_file.map_or(String::new(), |s| s.into()),
         }
     }

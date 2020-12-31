@@ -28,10 +28,7 @@ pub struct Sphere {
 
 impl Sphere {
     pub fn new(center: Point3, radius: f32) -> Self {
-        Sphere {
-            center: center,
-            radius: radius,
-        }
+        Sphere { center, radius }
     }
 }
 
@@ -70,8 +67,8 @@ impl Surface for Sphere {
             }
             let pos = ray.along(distance);
             Some(Intersection {
-                distance: distance,
-                pos: pos,
+                distance,
+                pos,
                 normal: (pos - self.center).normalize(),
             })
         }

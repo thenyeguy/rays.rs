@@ -1,4 +1,3 @@
-use image;
 use palette::{self, Limited, Pixel};
 use rand::{self, FromEntropy, Rng};
 use rayon::prelude::*;

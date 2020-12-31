@@ -9,7 +9,7 @@ pub struct Ray {
 impl Ray {
     pub fn new(origin: Point3, dir: Vector3) -> Self {
         Ray {
-            origin: origin,
+            origin,
             dir: dir.normalize(),
         }
     }

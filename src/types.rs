@@ -22,7 +22,7 @@ pub struct Mat3 {
 
 impl Vector3 {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
-        Vector3 { x: x, y: y, z: z }
+        Vector3 { x, y, z }
     }
 
     pub fn x(&self) -> f32 {
@@ -130,7 +130,7 @@ impl fmt::Debug for Vector3 {
 
 impl Point3 {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
-        Point3 { x: x, y: y, z: z }
+        Point3 { x, y, z }
     }
 
     pub fn x(&self) -> f32 {
@@ -193,7 +193,7 @@ impl fmt::Debug for Point3 {
 
 impl Mat3 {
     pub fn new(values: [[f32; 3]; 3]) -> Self {
-        Mat3 { values: values }
+        Mat3 { values }
     }
 }
 
@@ -243,7 +243,7 @@ impl fmt::Debug for Mat3 {
         write!(f, "{}", sep)?;
         write!(f, "{} {} {}", self[(2, 0)], self[(2, 1)], self[(2, 2)])?;
         if f.alternate() {
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
         write!(f, "]")
     }

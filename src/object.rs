@@ -23,7 +23,7 @@ impl Object {
     {
         Object {
             surface: Box::new(surface),
-            material: material,
+            material,
         }
     }
 
