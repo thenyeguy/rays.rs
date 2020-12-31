@@ -1,11 +1,10 @@
 use std::error;
 use std::fmt;
 use std::fs::File;
-use std::io::{self, BufRead, BufReader};
+use std::io;
 use std::path::Path;
 
 use palette::LinSrgb;
-use regex::Regex;
 use serde::Deserialize;
 
 use crate::material::Material;
@@ -13,7 +12,7 @@ use crate::object::Object;
 use crate::ray::Ray;
 use crate::scene::Scene;
 use crate::surface::*;
-use crate::types::Point3;
+use crate::wavefront::WavefrontObject;
 
 pub fn load_scene<P: AsRef<Path>>(path: P) -> Result<Scene, LoadError> {
     let file = File::open(path)?;
@@ -122,58 +121,14 @@ impl Into<Result<Vec<Object>, LoadError>> for ObjectPrototype {
                 objects.push(Object::new(Triangle::new([v0, v2, v3]), mat));
             }
             SurfacePrototype::Wavefront { obj_file } => {
-                for surface in load_object(obj_file)? {
-                    objects.push(Object::new(surface, mat));
+                let object = WavefrontObject::from_path(obj_file)?;
+                for face in object.faces {
+                    objects.push(Object::new(Triangle::new(face), mat));
                 }
             }
         }
         Ok(objects)
     }
-}
-
-fn load_object<P: AsRef<Path>>(path: P) -> io::Result<Vec<Triangle>> {
-    let mut vertices: Vec<Point3> = Vec::new();
-    let mut faces: Vec<(usize, usize, usize)> = Vec::new();
-
-    let comment_re = Regex::new(r"^#").unwrap();
-    let group_re = Regex::new(r"^g ").unwrap();
-    let vertex_re = Regex::new(r"^v +(\S+) +(\S+) +(\S+)").unwrap();
-    let face_re = Regex::new(r"^f +(\d+) +(\d+) +(\d+)").unwrap();
-
-    let file = File::open(path.as_ref())?;
-    for line in BufReader::new(&file).lines() {
-        let line = line?;
-        if line.is_empty() {
-            continue;
-        }
-        if comment_re.is_match(&line) {
-            continue;
-        }
-        if group_re.is_match(&line) {
-            continue;
-        }
-
-        if let Some(caps) = vertex_re.captures(&line) {
-            let v1 = caps[1].parse().unwrap_or(0.0);
-            let v2 = caps[2].parse().unwrap_or(0.0);
-            let v3 = caps[3].parse().unwrap_or(0.0);
-            vertices.push(Point3::new(v1, v2, v3));
-        } else if let Some(caps) = face_re.captures(&line) {
-            let v1: usize = caps[1].parse().unwrap();
-            let v2: usize = caps[2].parse().unwrap();
-            let v3: usize = caps[3].parse().unwrap();
-            faces.push((v1 - 1, v2 - 1, v3 - 1));
-        }
-    }
-
-    let mut surfaces: Vec<Triangle> = Vec::new();
-    for face in faces {
-        let v0 = vertices[face.0];
-        let v1 = vertices[face.1];
-        let v2 = vertices[face.2];
-        surfaces.push(Triangle::new([v0, v1, v2]));
-    }
-    Ok(surfaces)
 }
 
 #[derive(Debug, Deserialize)]

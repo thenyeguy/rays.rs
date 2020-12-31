@@ -10,3 +10,4 @@ pub mod render;
 pub mod scene;
 pub mod surface;
 pub mod types;
+pub mod wavefront;
