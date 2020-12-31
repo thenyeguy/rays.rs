@@ -16,7 +16,6 @@ pub struct Intersection {
 
 pub trait Surface: Debug + Sync {
     fn bounding_box(&self) -> BoundingBox;
-    fn centroid(&self) -> Point3;
     fn intersect(&self, ray: Ray) -> Option<Intersection>;
 }
 
@@ -42,10 +41,6 @@ impl Surface for Sphere {
             self.center.z() - self.radius,
             self.center.z() + self.radius,
         )
-    }
-
-    fn centroid(&self) -> Point3 {
-        self.center
     }
 
     fn intersect(&self, ray: Ray) -> Option<Intersection> {
@@ -105,10 +100,6 @@ impl Surface for Triangle {
         let (ymin, ymax) = float_bounds(&[v1.y(), v2.y(), v3.y()]);
         let (zmin, zmax) = float_bounds(&[v1.z(), v2.z(), v3.z()]);
         BoundingBox::axis_aligned(xmin, xmax, ymin, ymax, zmin, zmax)
-    }
-
-    fn centroid(&self) -> Point3 {
-        self.vertex + (self.edge1 + self.edge2) / 3.0
     }
 
     fn intersect(&self, ray: Ray) -> Option<Intersection> {

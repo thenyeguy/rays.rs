@@ -60,6 +60,13 @@ impl BoundingBox {
             ),
         }
     }
+
+    fn volume(&self) -> f32 {
+        let x = self.max.x() - self.min.x();
+        let y = self.max.y() - self.min.y();
+        let z = self.max.z() - self.min.z();
+        x * y * z
+    }
 }
 
 #[derive(Debug)]
@@ -74,9 +81,8 @@ impl<'a> BoundingVolumeHierarchy<'a> {
         let mut nodes = Vec::new();
         for object in &scene.objects {
             let node = Box::new(BvhNode::Leaf(object));
-            let centroid = object.surface.centroid();
             let bounding_box = object.surface.bounding_box();
-            nodes.push((node, centroid, bounding_box));
+            nodes.push((node, bounding_box));
         }
 
         while nodes.len() > 1 {
@@ -84,20 +90,19 @@ impl<'a> BoundingVolumeHierarchy<'a> {
             while nodes.len() > 1 {
                 let left = nodes.pop().unwrap();
                 let mut min_i = 0;
-                let mut min_dist = std::f32::INFINITY;
+                let mut min_volume = std::f32::INFINITY;
                 for (i, node) in nodes.iter().enumerate().skip(1) {
-                    let dist = (node.1 - left.1).norm_squared();
-                    if dist < min_dist {
+                    let volume = BoundingBox::merge(&left.1, &node.1).volume();
+                    if volume < min_volume {
                         min_i = i;
-                        min_dist = dist;
+                        min_volume = volume;
                     }
                 }
                 let right = nodes.swap_remove(min_i);
-                let new_box = BoundingBox::merge(&left.2, &right.2);
-                let new_centroid = point_mean(&left.1, &right.1);
+                let new_box = BoundingBox::merge(&left.1, &right.1);
                 let new_node =
                     Box::new(BvhNode::Node(new_box.clone(), left.0, right.0));
-                new_nodes.push((new_node, new_centroid, new_box));
+                new_nodes.push((new_node, new_box));
             }
             nodes.extend(new_nodes);
         }
@@ -153,12 +158,4 @@ impl<'a> BvhNode<'a> {
             BvhNode::Leaf(obj) => obj.collide(rng, ray),
         }
     }
-}
-
-fn point_mean(left: &Point3, right: &Point3) -> Point3 {
-    Point3::new(
-        left.x() + right.x() / 2.0,
-        left.y() + right.y() / 2.0,
-        left.z() + right.z() / 2.0,
-    )
 }
