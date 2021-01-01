@@ -4,4 +4,4 @@ camera:
 
 objects:
   - type: wavefront
-    obj_file: obj/cornell_box.obj
+    obj_file: obj/cornell_box_mirror.obj
