@@ -26,19 +26,19 @@ class Object(object):
                     vertex = tuple(float(b) for b in match.groups())
                     self.bounds = new_bounds(self.bounds, vertex)
                 elif match := group_re.match(line):
-                    self.groups.append(match.group(1))
+                    self.groups.add(match.group(1))
                 elif match := face_re.match(line):
                     self.faces += 1
                 elif match := material_re.match(line):
-                    self.materials.append(match.group(1))
+                    self.materials.add(match.group(1))
         return self
 
     def __init__(self, name):
         self.name = name
         self.bounds = [(0, 0, 0), (0, 0, 0)]
         self.faces = 0
-        self.groups = []
-        self.materials = []
+        self.groups = set()
+        self.materials = set()
 
     def print_summary(self):
         print("{}:".format(self.name))
