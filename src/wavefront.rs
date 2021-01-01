@@ -23,10 +23,11 @@ impl WavefrontObject {
     pub fn from_path<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         let path: &Path = path.as_ref();
 
-        let face_re = Regex::new(r"^f +(\d+) +(\d+) +(\d+)").unwrap();
-        let material_re = Regex::new(r"^usemtl +(\S+)").unwrap();
-        let material_file_re = Regex::new(r"^mtllib +(\S+)").unwrap();
-        let vertex_re = Regex::new(r"^v +(\S+) +(\S+) +(\S+)").unwrap();
+        let face_re =
+            Regex::new(r"^f\s+(\S+)\s+(\S+)\s+(\S+)(?: +(\S+))?").unwrap();
+        let material_re = Regex::new(r"^usemtl\s+(\S+)").unwrap();
+        let material_file_re = Regex::new(r"^mtllib\s+(\S+)").unwrap();
+        let vertex_re = Regex::new(r"^v\s+(\S+)\s+(\S+)\s+(\S+)").unwrap();
 
         let mut vertices = Vec::new();
         let mut faces = Vec::new();
@@ -51,17 +52,21 @@ impl WavefrontObject {
                 let v3 = caps[3].parse().unwrap_or(0.0);
                 vertices.push(Point3::new(v1, v2, v3));
             } else if let Some(caps) = face_re.captures(&line) {
-                let v1: usize = caps[1].parse().unwrap();
-                let v2: usize = caps[2].parse().unwrap();
-                let v3: usize = caps[3].parse().unwrap();
+                let v1 = parse_vertex_index(&caps[1], vertices.len());
+                let v2 = parse_vertex_index(&caps[2], vertices.len());
+                let v3 = parse_vertex_index(&caps[3], vertices.len());
                 faces.push(WavefrontFace {
                     material: material.clone(),
-                    vertices: [
-                        vertices[v1 - 1],
-                        vertices[v2 - 1],
-                        vertices[v3 - 1],
-                    ],
+                    vertices: [vertices[v1], vertices[v2], vertices[v3]],
                 });
+
+                if let Some(m4) = caps.get(4) {
+                    let v4 = parse_vertex_index(m4.as_str(), vertices.len());
+                    faces.push(WavefrontFace {
+                        material: material.clone(),
+                        vertices: [vertices[v1], vertices[v3], vertices[v4]],
+                    });
+                }
             } else if let Some(caps) = material_file_re.captures(&line) {
                 let material_file: &Path = caps[1].as_ref();
                 let material_path = path.parent().unwrap().join(material_file);
@@ -171,6 +176,15 @@ impl WavefrontMaterial {
         } else {
             Material::diffuse(self.diffuse_color)
         }
+    }
+}
+
+fn parse_vertex_index(index: &str, num_vertices: usize) -> usize {
+    let relative_index: isize = index.parse().unwrap();
+    if relative_index > 0 {
+        (relative_index - 1) as usize
+    } else {
+        (num_vertices as isize + relative_index) as usize
     }
 }
 
