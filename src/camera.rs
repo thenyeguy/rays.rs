@@ -22,8 +22,9 @@ impl Camera {
 
     pub fn get_ray(&self, x: f32, y: f32) -> Ray {
         // Create a view matrix pointing along the z axis, then rotate it to
-        // face down the camera ray.
-        Ray::new(self.origin, self.rotation * Vector3::new(x, y, self.z))
+        // face down the camera ray. Flip the x axis because we calculate left
+        // handed coordinates here, but read in right handed scene data.
+        Ray::new(self.origin, self.rotation * Vector3::new(-x, y, self.z))
     }
 }
 
