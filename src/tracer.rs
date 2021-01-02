@@ -18,7 +18,7 @@ impl<'a, R: Rng + ?Sized> PathTracer<'a, R> {
         scene: &'a Scene,
         bvh: &'a BoundingVolumeHierarchy<'_>,
         rng: &'a mut R,
-        max_reflections: u32
+        max_reflections: u32,
     ) -> Self {
         PathTracer {
             scene,
@@ -35,12 +35,14 @@ impl<'a, R: Rng + ?Sized> PathTracer<'a, R> {
         }
 
         self.reflections += 1;
-        self.bvh.sample(self.rng, ray)
+        self.bvh
+            .collide(ray)
+            .map(|collision| {
+                collision.material.sample(self.rng, &collision.intersection)
+            })
             .map_or(self.scene.global_illumination, |sample| match sample {
                 Sample::Emit(color) => color,
-                Sample::Bounce(color, ray) => {
-                    color * self.trace(ray)
-                }
+                Sample::Bounce(color, ray) => color * self.trace(ray),
             })
     }
 }

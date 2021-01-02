@@ -1,13 +1,11 @@
-use rand::Rng;
-
-use crate::material::{Material, Sample};
+use crate::material::Material;
 use crate::ray::Ray;
-use crate::surface::Surface;
+use crate::surface::{Intersection, Surface};
 
 #[derive(Copy, Clone, Debug)]
-pub struct Collision {
-    pub distance: f32,
-    pub sample: Sample,
+pub struct Collision<'a> {
+    pub intersection: Intersection,
+    pub material: &'a Material,
 }
 
 #[derive(Debug)]
@@ -27,16 +25,10 @@ impl Object {
         }
     }
 
-    pub fn collide<R: Rng + ?Sized>(
-        &self,
-        rng: &mut R,
-        ray: Ray,
-    ) -> Option<Collision> {
-        self.surface
-            .intersect(ray)
-            .map(|ref intersection| Collision {
-                distance: intersection.distance,
-                sample: self.material.sample(rng, ray, &intersection),
-            })
+    pub fn collide(&self, ray: Ray) -> Option<Collision> {
+        self.surface.intersect(ray).map(|intersection| Collision {
+            intersection,
+            material: &self.material,
+        })
     }
 }

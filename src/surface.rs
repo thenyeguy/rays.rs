@@ -10,7 +10,8 @@ const EPSILON: f32 = 0.00001;
 #[derive(Copy, Clone, Debug)]
 pub struct Intersection {
     pub distance: f32,
-    pub pos: Point3,
+    pub position: Point3,
+    pub incident: Vector3,
     pub normal: Vector3,
 }
 
@@ -60,11 +61,12 @@ impl Surface for Sphere {
             if distance <= EPSILON {
                 return None;
             }
-            let pos = ray.along(distance);
+            let position = ray.along(distance);
             Some(Intersection {
                 distance,
-                pos,
-                normal: (pos - self.center).normalize(),
+                position,
+                incident: ray.dir,
+                normal: (position - self.center).normalize(),
             })
         }
     }
@@ -130,7 +132,8 @@ impl Surface for Triangle {
 
         Some(Intersection {
             distance: dist,
-            pos: ray.along(dist),
+            position: ray.along(dist),
+            incident: ray.dir,
             normal: if det > 0.0 { self.normal } else { -self.normal },
         })
     }

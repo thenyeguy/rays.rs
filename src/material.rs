@@ -50,7 +50,6 @@ impl Material {
     pub fn sample<R: Rng + ?Sized>(
         &self,
         rng: &mut R,
-        ray: Ray,
         int: &Intersection,
     ) -> Sample {
         match self.kind {
@@ -67,18 +66,19 @@ impl Material {
                 if intensity < 0.0 {
                     Sample::Bounce(
                         self.color * -intensity,
-                        Ray::new(int.pos, -1.0 * dir),
+                        Ray::new(int.position, -1.0 * dir),
                     )
                 } else {
                     Sample::Bounce(
                         self.color * intensity,
-                        Ray::new(int.pos, dir),
+                        Ray::new(int.position, dir),
                     )
                 }
             }
             Kind::Specular => {
-                let dir = ray.dir - 2.0 * int.normal.dot(ray.dir) * int.normal;
-                Sample::Bounce(self.color, Ray::new(int.pos, dir))
+                let dir = int.incident
+                    - 2.0 * int.normal.dot(int.incident) * int.normal;
+                Sample::Bounce(self.color, Ray::new(int.position, dir))
             }
         }
     }

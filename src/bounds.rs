@@ -1,7 +1,4 @@
-use rand::Rng;
-
 use crate::float;
-use crate::material::Sample;
 use crate::object::{Collision, Object};
 use crate::ray::Ray;
 use crate::scene::Scene;
@@ -113,12 +110,8 @@ impl<'a> BoundingVolumeHierarchy<'a> {
         }
     }
 
-    pub fn sample<R: Rng + ?Sized>(
-        &self,
-        rng: &mut R,
-        ray: Ray,
-    ) -> Option<Sample> {
-        self.root.sample(rng, ray).map(|collision| collision.sample)
+    pub fn collide(&self, ray: Ray) -> Option<Collision> {
+        self.root.collide(ray)
     }
 }
 
@@ -129,19 +122,17 @@ enum BvhNode<'a> {
 }
 
 impl<'a> BvhNode<'a> {
-    fn sample<R: Rng + ?Sized>(
-        &self,
-        rng: &mut R,
-        ray: Ray,
-    ) -> Option<Collision> {
+    fn collide(&self, ray: Ray) -> Option<Collision> {
         match *self {
             BvhNode::Node(ref bb, ref left, ref right) => {
                 if bb.intersects(ray) {
-                    let left = left.sample(rng, ray);
-                    let right = right.sample(rng, ray);
+                    let left = left.collide(ray);
+                    let right = right.collide(ray);
                     match (left, right) {
                         (Some(lc), Some(rc)) => {
-                            if lc.distance < rc.distance {
+                            if lc.intersection.distance
+                                < rc.intersection.distance
+                            {
                                 Some(lc)
                             } else {
                                 Some(rc)
@@ -155,7 +146,7 @@ impl<'a> BvhNode<'a> {
                     None
                 }
             }
-            BvhNode::Leaf(obj) => obj.collide(rng, ray),
+            BvhNode::Leaf(obj) => obj.collide(ray),
         }
     }
 }
