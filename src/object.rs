@@ -3,7 +3,7 @@ use crate::ray::Ray;
 use crate::surface::{Intersection, Surface};
 
 #[derive(Copy, Clone, Debug)]
-pub struct Collision<'a> {
+pub struct Sample<'a> {
     pub intersection: Intersection,
     pub material: &'a Material,
 }
@@ -25,8 +25,8 @@ impl Object {
         }
     }
 
-    pub fn collide(&self, ray: Ray) -> Option<Collision> {
-        self.surface.intersect(ray).map(|intersection| Collision {
+    pub fn sample(&self, ray: Ray) -> Option<Sample> {
+        self.surface.intersect(ray).map(|intersection| Sample {
             intersection,
             material: &self.material,
         })

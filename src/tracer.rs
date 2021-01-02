@@ -1,7 +1,6 @@
 use rand::Rng;
 
 use crate::bounds::BoundingVolumeHierarchy;
-use crate::material::Sample;
 use crate::ray::Ray;
 use crate::scene::Scene;
 
@@ -29,6 +28,10 @@ impl<'a, R: Rng + ?Sized> PathTracer<'a, R> {
         }
     }
 
+    pub fn rng(&mut self) -> &mut R {
+        self.rng
+    }
+
     pub fn trace(&mut self, ray: Ray) -> palette::LinSrgb {
         if self.reflections > self.max_reflections {
             return self.scene.global_illumination;
@@ -36,13 +39,8 @@ impl<'a, R: Rng + ?Sized> PathTracer<'a, R> {
 
         self.reflections += 1;
         self.bvh
-            .collide(ray)
-            .map(|collision| {
-                collision.material.sample(self.rng, &collision.intersection)
-            })
-            .map_or(self.scene.global_illumination, |sample| match sample {
-                Sample::Emit(color) => color,
-                Sample::Bounce(color, ray) => color * self.trace(ray),
-            })
+            .sample(ray)
+            .map(|sample| sample.material.sample(self, &sample.intersection))
+            .unwrap_or(self.scene.global_illumination)
     }
 }

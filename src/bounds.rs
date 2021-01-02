@@ -1,5 +1,5 @@
 use crate::float;
-use crate::object::{Collision, Object};
+use crate::object::{Object, Sample};
 use crate::ray::Ray;
 use crate::scene::Scene;
 use crate::types::Point3;
@@ -110,8 +110,8 @@ impl<'a> BoundingVolumeHierarchy<'a> {
         }
     }
 
-    pub fn collide(&self, ray: Ray) -> Option<Collision> {
-        self.root.collide(ray)
+    pub fn sample(&self, ray: Ray) -> Option<Sample> {
+        self.root.sample(ray)
     }
 }
 
@@ -122,12 +122,12 @@ enum BvhNode<'a> {
 }
 
 impl<'a> BvhNode<'a> {
-    fn collide(&self, ray: Ray) -> Option<Collision> {
+    fn sample(&self, ray: Ray) -> Option<Sample> {
         match *self {
             BvhNode::Node(ref bb, ref left, ref right) => {
                 if bb.intersects(ray) {
-                    let left = left.collide(ray);
-                    let right = right.collide(ray);
+                    let left = left.sample(ray);
+                    let right = right.sample(ray);
                     match (left, right) {
                         (Some(lc), Some(rc)) => {
                             if lc.intersection.distance
@@ -146,7 +146,7 @@ impl<'a> BvhNode<'a> {
                     None
                 }
             }
-            BvhNode::Leaf(obj) => obj.collide(ray),
+            BvhNode::Leaf(obj) => obj.sample(ray),
         }
     }
 }

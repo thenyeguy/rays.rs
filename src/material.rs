@@ -4,13 +4,8 @@ use std::f32::consts::PI;
 
 use crate::ray::Ray;
 use crate::surface::Intersection;
+use crate::tracer::PathTracer;
 use crate::types::Vector3;
-
-#[derive(Copy, Clone, Debug)]
-pub enum Sample {
-    Emit(LinSrgb),
-    Bounce(LinSrgb, Ray),
-}
 
 #[derive(Copy, Clone, Debug)]
 enum Kind {
@@ -49,36 +44,35 @@ impl Material {
 
     pub fn sample<R: Rng + ?Sized>(
         &self,
-        rng: &mut R,
+        tracer: &mut PathTracer<R>,
         int: &Intersection,
-    ) -> Sample {
+    ) -> LinSrgb {
         match self.kind {
-            Kind::Emissive => Sample::Emit(self.color),
+            Kind::Emissive => self.color,
             Kind::Diffuse => {
                 // Generate a random direction vector.
-                let theta = rng.gen::<f32>() * 2.0 * PI;
-                let z = rng.gen::<f32>();
+                let theta = tracer.rng().gen::<f32>() * 2.0 * PI;
+                let z = tracer.rng().gen::<f32>();
                 let zp = (1.0 - z * z).sqrt();
-                let dir = Vector3::new(zp * theta.cos(), zp * theta.sin(), z);
+                let mut dir =
+                    Vector3::new(zp * theta.cos(), zp * theta.sin(), z);
 
                 // Ensure we sample only from a hemisphere
-                let intensity = dir.dot(int.normal);
+                let mut intensity = dir.dot(int.normal);
                 if intensity < 0.0 {
-                    Sample::Bounce(
-                        self.color * -intensity,
-                        Ray::new(int.position, -1.0 * dir),
-                    )
-                } else {
-                    Sample::Bounce(
-                        self.color * intensity,
-                        Ray::new(int.position, dir),
-                    )
+                    dir = dir * -1.0;
+                    intensity *= -1.0;
                 }
+
+                // Recurse and combine colors.
+                self.color
+                    * intensity
+                    * tracer.trace(Ray::new(int.position, dir))
             }
             Kind::Specular => {
                 let dir = int.incident
                     - 2.0 * int.normal.dot(int.incident) * int.normal;
-                Sample::Bounce(self.color, Ray::new(int.position, dir))
+                self.color * tracer.trace(Ray::new(int.position, dir))
             }
         }
     }
