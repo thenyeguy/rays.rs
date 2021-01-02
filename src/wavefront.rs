@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::path::Path;
+use std::str::FromStr;
 
 use palette::LinSrgb;
-use regex::Regex;
 
 use crate::material::Material;
 use crate::object::Object;
@@ -21,61 +21,57 @@ pub struct WavefrontObject {
 
 impl WavefrontObject {
     pub fn from_path<P: AsRef<Path>>(path: P) -> io::Result<Self> {
-        let path: &Path = path.as_ref();
-
-        let face_re =
-            Regex::new(r"^f\s+(\S+)\s+(\S+)\s+(\S+)(?: +(\S+))?").unwrap();
-        let material_re = Regex::new(r"^usemtl\s+(\S+)").unwrap();
-        let material_file_re = Regex::new(r"^mtllib\s+(\S+)").unwrap();
-        let vertex_re = Regex::new(r"^v\s+(\S+)\s+(\S+)\s+(\S+)").unwrap();
-
         let mut vertices = Vec::new();
         let mut faces = Vec::new();
-
         let mut material: String = DEFAULT_MATERIAL.into();
         let mut materials = HashMap::new();
-
         let mut default_material = WavefrontMaterial::new(DEFAULT_MATERIAL);
         default_material.diffuse_color = LinSrgb::new(1.0, 1.0, 1.0);
         materials.insert(DEFAULT_MATERIAL.into(), default_material);
 
+        let path: &Path = path.as_ref();
         let file = File::open(path)?;
         for line in BufReader::new(&file).lines() {
-            let line = line?;
+            let line = line?.trim().replace('\t', " ");
             if line.is_empty() || line.starts_with('#') {
                 continue;
-            }
-
-            if let Some(caps) = vertex_re.captures(&line) {
-                let v1 = caps[1].parse().unwrap_or(0.0);
-                let v2 = caps[2].parse().unwrap_or(0.0);
-                let v3 = caps[3].parse().unwrap_or(0.0);
-                vertices.push(Point3::new(v1, v2, v3));
-            } else if let Some(caps) = face_re.captures(&line) {
-                let v1 = parse_vertex_index(&caps[1], vertices.len());
-                let v2 = parse_vertex_index(&caps[2], vertices.len());
-                let v3 = parse_vertex_index(&caps[3], vertices.len());
-                faces.push(WavefrontFace {
-                    material: material.clone(),
-                    vertices: [vertices[v1], vertices[v2], vertices[v3]],
-                });
-
-                if let Some(m4) = caps.get(4) {
-                    let v4 = parse_vertex_index(m4.as_str(), vertices.len());
-                    faces.push(WavefrontFace {
-                        material: material.clone(),
-                        vertices: [vertices[v1], vertices[v3], vertices[v4]],
-                    });
-                }
-            } else if let Some(caps) = material_file_re.captures(&line) {
-                let material_file: &Path = caps[1].as_ref();
+            } else if line.starts_with("mtllib") {
+                let material_file = line.strip_prefix("mtllib").unwrap().trim();
                 let material_path = path.parent().unwrap().join(material_file);
                 WavefrontMaterial::load_materials(
                     material_path,
                     &mut materials,
                 )?;
-            } else if let Some(caps) = material_re.captures(&line) {
-                material = caps[1].into();
+            } else if line.starts_with("usemtl") {
+                material = line.strip_prefix("usemtl").unwrap().trim().into();
+            } else if line.starts_with("v ") {
+                vertices.push(Point3::from(collect_triple(&line)?));
+            } else if line.starts_with("f ") {
+                let indices = collect_args::<isize>(&line)?;
+                if indices.len() >= 3 {
+                    let v1 = get_absolute_index(indices[0], vertices.len())?;
+                    let v2 = get_absolute_index(indices[1], vertices.len())?;
+                    let v3 = get_absolute_index(indices[2], vertices.len())?;
+                    faces.push(WavefrontFace {
+                        material: material.clone(),
+                        vertices: [vertices[v1], vertices[v2], vertices[v3]],
+                    });
+
+                    if indices.len() >= 4 {
+                        let v4 =
+                            get_absolute_index(indices[3], vertices.len())?;
+                        faces.push(WavefrontFace {
+                            material: material.clone(),
+                            vertices: [
+                                vertices[v1],
+                                vertices[v3],
+                                vertices[v4],
+                            ],
+                        });
+                    }
+                } else {
+                    return Err(io::Error::from(io::ErrorKind::InvalidData));
+                }
             }
         }
 
@@ -122,49 +118,29 @@ impl WavefrontMaterial {
         path: P,
         materials: &mut HashMap<String, Self>,
     ) -> io::Result<()> {
-        let new_material_re = Regex::new(r"^newmtl +(\S+)").unwrap();
-        let diffuse_color_re =
-            Regex::new(r"^ *Ka +(\S+) +(\S+) +(\S+)").unwrap();
-        let emissive_color_re =
-            Regex::new(r"^ *Ke +(\S+) +(\S+) +(\S+)").unwrap();
-        let specular_color_re =
-            Regex::new(r"^ *Ks +(\S+) +(\S+) +(\S+)").unwrap();
-
         let mut material = String::from(DEFAULT_MATERIAL);
         let file = File::open(path.as_ref())?;
         for line in BufReader::new(&file).lines() {
-            let line = line?;
+            let line = line?.trim().replace('\t', " ");
             if line.is_empty() || line.starts_with('#') {
                 continue;
-            }
-
-            if let Some(caps) = new_material_re.captures(&line) {
-                material = caps[1].into();
+            } else if line.starts_with("newmtl") {
+                material = line.strip_prefix("newmtl").unwrap().trim().into();
                 materials.insert(
                     material.clone(),
                     WavefrontMaterial::new(&material),
                 );
-            } else if let Some(caps) = diffuse_color_re.captures(&line) {
-                let r = caps[1].parse().unwrap_or(0.0);
-                let g = caps[2].parse().unwrap_or(0.0);
-                let b = caps[3].parse().unwrap_or(0.0);
+            } else if line.starts_with("Kd") {
                 materials.get_mut(&material).unwrap().diffuse_color =
-                    LinSrgb::new(r, g, b);
-            } else if let Some(caps) = emissive_color_re.captures(&line) {
-                let r = caps[1].parse().unwrap_or(0.0);
-                let g = caps[2].parse().unwrap_or(0.0);
-                let b = caps[3].parse().unwrap_or(0.0);
+                    LinSrgb::from_components(collect_triple(&line)?);
+            } else if line.starts_with("Ke") {
                 materials.get_mut(&material).unwrap().emissive_color =
-                    LinSrgb::new(r, g, b);
-            } else if let Some(caps) = specular_color_re.captures(&line) {
-                let r = caps[1].parse().unwrap_or(0.0);
-                let g = caps[2].parse().unwrap_or(0.0);
-                let b = caps[3].parse().unwrap_or(0.0);
+                    LinSrgb::from_components(collect_triple(&line)?);
+            } else if line.starts_with("Ks") {
                 materials.get_mut(&material).unwrap().specular_color =
-                    LinSrgb::new(r, g, b);
+                    LinSrgb::from_components(collect_triple(&line)?);
             }
         }
-
         Ok(())
     }
 
@@ -179,12 +155,32 @@ impl WavefrontMaterial {
     }
 }
 
-fn parse_vertex_index(index: &str, num_vertices: usize) -> usize {
-    let relative_index: isize = index.parse().unwrap();
-    if relative_index > 0 {
-        (relative_index - 1) as usize
+fn collect_triple<T: Copy + FromStr>(line: &str) -> io::Result<(T, T, T)> {
+    match collect_args(line)?.as_slice() {
+        [a, b, c] => Ok((*a, *b, *c)),
+        _ => Err(io::Error::from(io::ErrorKind::InvalidData)),
+    }
+}
+
+fn collect_args<T: FromStr>(line: &str) -> io::Result<Vec<T>> {
+    line.split_whitespace()
+        .skip(1)
+        .map(parse_arg::<T>)
+        .collect()
+}
+
+fn parse_arg<T: FromStr>(arg: &str) -> io::Result<T> {
+    arg.parse::<T>()
+        .map_err(|_| io::Error::from(io::ErrorKind::InvalidData))
+}
+
+fn get_absolute_index(index: isize, max_index: usize) -> io::Result<usize> {
+    if index == 0 || index > max_index as isize {
+        Err(io::Error::from(io::ErrorKind::InvalidData))
+    } else if index > 0 {
+        Ok((index - 1) as usize)
     } else {
-        (num_vertices as isize + relative_index) as usize
+        Ok((max_index as isize + index) as usize)
     }
 }
 
