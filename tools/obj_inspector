@@ -6,8 +6,8 @@ import sys
 
 
 face_re = re.compile(r"^f ")
-group_re = re.compile(r"^g +(\w+)")
-material_re = re.compile(r"^usemtl +(\w+)")
+group_re = re.compile(r"^g +(\S+)")
+material_re = re.compile(r"^usemtl +(\S+)")
 vertex_re = re.compile(r"^v +(\S+) +(\S+) +(\S+)")
 
 
