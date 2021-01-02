@@ -5,9 +5,8 @@ use std::f32;
 
 use crate::bounds::BoundingVolumeHierarchy;
 use crate::camera::Camera;
-use crate::material::Sample;
-use crate::ray::Ray;
 use crate::scene::Scene;
+use crate::tracer::PathTracer;
 
 pub trait RenderProgress: Sync {
     fn on_row_done(&self);
@@ -44,14 +43,14 @@ impl Renderer {
                         for _ in 0..self.samples_per_pixel {
                             let dx = rng.gen::<f32>() - 0.5;
                             let dy = rng.gen::<f32>() - 0.5;
+                            let mut tracer = PathTracer::new(
+                                &scene,
+                                &bvh,
+                                &mut rng,
+                                self.max_reflections,
+                            );
                             color = color
-                                + self.trace(
-                                    scene,
-                                    &bvh,
-                                    &mut rng,
-                                    camera.get_ray(x + dx, y + dy),
-                                    0,
-                                );
+                                + tracer.trace(camera.get_ray(x + dx, y + dy));
                         }
                         color = (color / self.samples_per_pixel as f32).clamp();
                         palette::Srgb::from_linear(color)
@@ -75,26 +74,5 @@ impl Renderer {
             }
         }
         image
-    }
-
-    fn trace<R: Rng + ?Sized>(
-        &self,
-        scene: &Scene,
-        bvh: &BoundingVolumeHierarchy<'_>,
-        rng: &mut R,
-        ray: Ray,
-        reflections: u32,
-    ) -> palette::LinSrgb {
-        if reflections > self.max_reflections {
-            return scene.global_illumination;
-        }
-
-        bvh.sample(rng, ray)
-            .map_or(scene.global_illumination, |sample| match sample {
-                Sample::Emit(color) => color,
-                Sample::Bounce(color, ray) => {
-                    color * self.trace(scene, bvh, rng, ray, reflections + 1)
-                }
-            })
     }
 }

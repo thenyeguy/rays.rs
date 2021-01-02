@@ -9,5 +9,6 @@ pub mod ray;
 pub mod render;
 pub mod scene;
 pub mod surface;
+pub mod tracer;
 pub mod types;
 pub mod wavefront;
