@@ -19,8 +19,10 @@ impl Logger {
             prof_file: prof_file.map_or(String::new(), |s| s.into()),
         }
     }
+}
 
-    fn on_start(&self) {
+impl RenderProgress for Logger {
+    fn on_render_start(&self) {
         println!("Rendering image...");
         self.progress_bar.enable_steady_tick(100 /* ms */);
         if !self.prof_file.is_empty() {
@@ -32,18 +34,16 @@ impl Logger {
         }
     }
 
-    fn on_finish(&self) {
+    fn on_row_done(&self) {
+        self.progress_bar.inc(1);
+    }
+
+    fn on_render_done(&self) {
         self.progress_bar.finish();
         if !self.prof_file.is_empty() {
             cpuprofiler::PROFILER.lock().unwrap().stop().unwrap();
             println!("Profile saved to: {}", self.prof_file);
         }
-    }
-}
-
-impl RenderProgress for Logger {
-    fn on_row_done(&self) {
-        self.progress_bar.inc(1);
     }
 }
 
@@ -77,15 +77,14 @@ fn main() {
     let scene_file = args.value_of("scene").unwrap();
     let output = args.value_of("output").unwrap();
 
+    println!("Loading scene...");
     let scene = load_scene(scene_file).unwrap_or_else(|e| {
         println!("Error loading scene: {}", e);
         std::process::exit(1);
     });
 
     let logger = Logger::new(&renderer, profile);
-    logger.on_start();
     let img = renderer.render(&scene, &logger);
-    logger.on_finish();
 
     img.save(&output).unwrap_or_else(|e| {
         println!("Could not write file: {}", e);

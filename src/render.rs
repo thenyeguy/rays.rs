@@ -9,7 +9,9 @@ use crate::scene::Scene;
 use crate::tracer::PathTracer;
 
 pub trait RenderProgress: Sync {
+    fn on_render_start(&self);
     fn on_row_done(&self);
+    fn on_render_done(&self);
 }
 
 #[derive(Clone, Debug)]
@@ -29,6 +31,7 @@ impl Renderer {
     ) -> image::RgbImage {
         let bvh = BoundingVolumeHierarchy::new(scene);
         let camera = Camera::new(scene.camera_ray, self.width, self.fov);
+        progress.on_render_start();
         let pixels: Vec<Vec<_>> = (0..self.width)
             .into_par_iter()
             .map(|i| {
@@ -62,6 +65,7 @@ impl Renderer {
                 row
             })
             .collect();
+        progress.on_render_done();
 
         let mut image = image::ImageBuffer::new(self.width, self.height);
         for i in 0..self.width {
