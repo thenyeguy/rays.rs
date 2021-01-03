@@ -69,7 +69,7 @@ fn main() {
         width: value_t!(args, "width", u32).unwrap_or(100),
         height: value_t!(args, "height", u32).unwrap_or(100),
         fov: value_t!(args, "fov", u32).unwrap_or(45),
-        samples_per_pixel: value_t!(args, "samples", u32).unwrap_or(50),
+        samples_per_pixel: value_t!(args, "samples", u32).unwrap_or(500),
         max_reflections: value_t!(args, "reflections", u32).unwrap_or(5),
     };
 
