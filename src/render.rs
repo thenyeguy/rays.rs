@@ -3,7 +3,7 @@ use rand::{self, FromEntropy, Rng};
 use rayon::prelude::*;
 use std::f32;
 
-use crate::bounds::BoundingVolumeHierarchy;
+use crate::bvh::BoundingVolumeHierarchy;
 use crate::camera::Camera;
 use crate::scene::Scene;
 use crate::tracer::PathTracer;

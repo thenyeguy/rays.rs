@@ -1,6 +1,6 @@
 use rand::Rng;
 
-use crate::bounds::BoundingVolumeHierarchy;
+use crate::bvh::BoundingVolumeHierarchy;
 use crate::ray::Ray;
 use crate::scene::Scene;
 

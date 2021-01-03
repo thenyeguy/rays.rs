@@ -1,4 +1,5 @@
 pub mod bounds;
+pub mod bvh;
 pub mod camera;
 pub mod float;
 pub mod loader;
