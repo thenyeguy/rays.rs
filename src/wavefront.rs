@@ -47,19 +47,18 @@ impl WavefrontObject {
             } else if line.starts_with("v ") {
                 vertices.push(Point3::from(collect_triple(&line)?));
             } else if line.starts_with("f ") {
-                let indices = collect_args::<isize>(&line)?;
+                let indices = collect_args::<FaceIndex>(&line)?;
                 if indices.len() >= 3 {
-                    let v1 = get_absolute_index(indices[0], vertices.len())?;
-                    let v2 = get_absolute_index(indices[1], vertices.len())?;
-                    let v3 = get_absolute_index(indices[2], vertices.len())?;
+                    let v1 = indices[0].vertex(vertices.len())?;
+                    let v2 = indices[1].vertex(vertices.len())?;
+                    let v3 = indices[2].vertex(vertices.len())?;
                     faces.push(WavefrontFace {
                         material: material.clone(),
                         vertices: [vertices[v1], vertices[v2], vertices[v3]],
                     });
 
                     if indices.len() >= 4 {
-                        let v4 =
-                            get_absolute_index(indices[3], vertices.len())?;
+                        let v4 = indices[3].vertex(vertices.len())?;
                         faces.push(WavefrontFace {
                             material: material.clone(),
                             vertices: [
@@ -152,6 +151,29 @@ impl WavefrontMaterial {
         } else {
             Material::diffuse(self.diffuse_color)
         }
+    }
+}
+
+#[derive(Clone, Debug)]
+struct FaceIndex {
+    vertex_index: isize,
+}
+
+impl FaceIndex {
+    fn vertex(&self, num_vertices: usize) -> io::Result<usize> {
+        get_absolute_index(self.vertex_index, num_vertices)
+    }
+}
+
+impl FromStr for FaceIndex {
+    type Err = io::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let components = s.split('/').collect::<Vec<_>>();
+        let vertex_index: isize = components.get(0).map_or(
+            Err(io::Error::from(io::ErrorKind::InvalidData)),
+            |idx| parse_arg(idx),
+        )?;
+        Ok(FaceIndex { vertex_index })
     }
 }
 
