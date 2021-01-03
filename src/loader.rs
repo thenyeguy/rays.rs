@@ -130,7 +130,7 @@ impl Into<Result<Vec<Object>, LoadError>> for ObjectPrototype {
             }
             SurfacePrototype::Wavefront { obj_file } => {
                 let wavefront_object = WavefrontObject::from_path(obj_file)?;
-                for object in wavefront_object.into_objects() {
+                for object in wavefront_object.compile() {
                     objects.push(object);
                 }
             }

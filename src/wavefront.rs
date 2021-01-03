@@ -15,19 +15,19 @@ static DEFAULT_MATERIAL: &str = "__rays_default__";
 
 #[derive(Clone, Debug)]
 pub struct WavefrontObject {
-    pub faces: Vec<WavefrontFace>,
-    pub materials: HashMap<String, WavefrontMaterial>,
+    faces: Vec<WavefrontFace>,
+    materials: HashMap<String, WavefrontMaterial>,
 }
 
 impl WavefrontObject {
     pub fn from_path<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         let mut vertices = Vec::new();
         let mut faces = Vec::new();
-        let mut material: String = DEFAULT_MATERIAL.into();
+        let mut material: String = DEFAULT_MATERIAL.to_string();
         let mut materials = HashMap::new();
         let mut default_material = WavefrontMaterial::new(DEFAULT_MATERIAL);
         default_material.diffuse_color = LinSrgb::new(1.0, 1.0, 1.0);
-        materials.insert(DEFAULT_MATERIAL.into(), default_material);
+        materials.insert(DEFAULT_MATERIAL.to_string(), default_material);
 
         let path: &Path = path.as_ref();
         let file = File::open(path)?;
@@ -43,7 +43,8 @@ impl WavefrontObject {
                     &mut materials,
                 )?;
             } else if line.starts_with("usemtl") {
-                material = line.strip_prefix("usemtl").unwrap().trim().into();
+                material =
+                    line.strip_prefix("usemtl").unwrap().trim().to_string();
             } else if line.starts_with("v ") {
                 vertices.push(Point3::from(collect_triple(&line)?));
             } else if line.starts_with("f ") {
@@ -77,7 +78,7 @@ impl WavefrontObject {
         Ok(WavefrontObject { faces, materials })
     }
 
-    pub fn into_objects(self) -> Vec<Object> {
+    pub fn compile(self) -> Vec<Object> {
         let mut objects = Vec::new();
         for face in self.faces {
             objects.push(Object::new(
@@ -90,23 +91,23 @@ impl WavefrontObject {
 }
 
 #[derive(Clone, Debug)]
-pub struct WavefrontFace {
-    pub material: String,
-    pub vertices: [Point3; 3],
+struct WavefrontFace {
+    material: String,
+    vertices: [Point3; 3],
 }
 
 #[derive(Clone, Debug)]
-pub struct WavefrontMaterial {
-    pub name: String,
-    pub diffuse_color: LinSrgb,
-    pub emissive_color: LinSrgb,
-    pub specular_color: LinSrgb,
+struct WavefrontMaterial {
+    name: String,
+    diffuse_color: LinSrgb,
+    emissive_color: LinSrgb,
+    specular_color: LinSrgb,
 }
 
 impl WavefrontMaterial {
     fn new(name: &str) -> Self {
         WavefrontMaterial {
-            name: name.into(),
+            name: name.to_string(),
             diffuse_color: LinSrgb::default(),
             emissive_color: LinSrgb::default(),
             specular_color: LinSrgb::default(),
@@ -124,7 +125,8 @@ impl WavefrontMaterial {
             if line.is_empty() || line.starts_with('#') {
                 continue;
             } else if line.starts_with("newmtl") {
-                material = line.strip_prefix("newmtl").unwrap().trim().into();
+                material =
+                    line.strip_prefix("newmtl").unwrap().trim().to_string();
                 materials.insert(
                     material.clone(),
                     WavefrontMaterial::new(&material),
