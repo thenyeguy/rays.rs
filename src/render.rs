@@ -10,7 +10,7 @@ use crate::tracer::PathTracer;
 
 pub trait RenderProgress: Sync {
     fn on_render_start(&self);
-    fn on_row_done(&self);
+    fn on_col_done(&self);
     fn on_render_done(&self);
 }
 
@@ -36,7 +36,7 @@ impl Renderer {
             .into_par_iter()
             .map(|i| {
                 let mut rng = rand::rngs::SmallRng::from_entropy();
-                let row = (0..self.height)
+                let col = (0..self.height)
                     .into_iter()
                     .map(|j| {
                         let x = i as f32 - (self.width / 2) as f32;
@@ -61,8 +61,8 @@ impl Renderer {
                             .into_raw()
                     })
                     .collect();
-                progress.on_row_done();
-                row
+                progress.on_col_done();
+                col
             })
             .collect();
         progress.on_render_done();

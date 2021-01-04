@@ -9,7 +9,7 @@ struct Logger {
 
 impl Logger {
     fn new(renderer: &Renderer, prof_file: Option<&str>) -> Self {
-        let progress_bar = ProgressBar::new(renderer.height as u64);
+        let progress_bar = ProgressBar::new(renderer.width as u64);
         progress_bar.set_style(
             ProgressStyle::default_bar()
                 .template("    [{elapsed_precise}] {wide_bar} {percent}%    "),
@@ -24,7 +24,7 @@ impl Logger {
 impl RenderProgress for Logger {
     fn on_render_start(&self) {
         println!("Rendering image...");
-        self.progress_bar.enable_steady_tick(100 /* ms */);
+        self.progress_bar.reset_elapsed();
         if !self.prof_file.is_empty() {
             cpuprofiler::PROFILER
                 .lock()
@@ -34,7 +34,7 @@ impl RenderProgress for Logger {
         }
     }
 
-    fn on_row_done(&self) {
+    fn on_col_done(&self) {
         self.progress_bar.inc(1);
     }
 
