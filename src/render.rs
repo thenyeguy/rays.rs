@@ -1,5 +1,5 @@
 use palette::{self, Limited, Pixel};
-use rand::{self, FromEntropy, Rng};
+use rand::{Rng, SeedableRng};
 use rayon::prelude::*;
 use std::f32;
 
