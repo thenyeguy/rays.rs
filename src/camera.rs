@@ -11,12 +11,13 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(camera_ray: Ray, width: u32, fov: u32) -> Self {
+    pub fn new(camera_ray: Ray, fov: u32) -> Self {
         assert!(0 < fov && fov < 180);
+        let fov = fov as f32 * PI / 180.0;
         Camera {
             origin: camera_ray.origin,
             rotation: make_rotation_matrix(&camera_ray.dir),
-            z: (width as f32 / 2.0) / (fov as f32 * PI / 180.0 / 2.0).tan(),
+            z: 0.5 / (0.5 * fov).tan(),
         }
     }
 

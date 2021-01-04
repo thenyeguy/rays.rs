@@ -30,7 +30,7 @@ impl Renderer {
         progress: &dyn RenderProgress,
     ) -> image::RgbImage {
         let bvh = BoundingVolumeHierarchy::new(scene);
-        let camera = Camera::new(scene.camera_ray, self.width, self.fov);
+        let camera = Camera::new(scene.camera_ray, self.fov);
         progress.on_render_start();
         let pixels: Vec<Vec<_>> = (0..self.width)
             .into_par_iter()
@@ -46,6 +46,8 @@ impl Renderer {
                         for _ in 0..self.samples_per_pixel {
                             let dx = rng.gen::<f32>() - 0.5;
                             let dy = rng.gen::<f32>() - 0.5;
+                            let xnorm = (x + dx) / self.width as f32;
+                            let ynorm = (y + dy) / self.width as f32;
                             let mut tracer = PathTracer::new(
                                 &scene,
                                 &bvh,
@@ -53,7 +55,7 @@ impl Renderer {
                                 self.max_reflections,
                             );
                             color = color
-                                + tracer.trace(camera.get_ray(x + dx, y + dy));
+                                + tracer.trace(camera.get_ray(xnorm, ynorm));
                         }
                         color = (color / self.samples_per_pixel as f32).clamp();
                         palette::Srgb::from_linear(color)
