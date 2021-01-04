@@ -4,7 +4,6 @@ use rayon::prelude::*;
 use std::f32;
 
 use crate::bvh::BoundingVolumeHierarchy;
-use crate::camera::Camera;
 use crate::scene::Scene;
 use crate::tracer::PathTracer;
 
@@ -18,7 +17,6 @@ pub trait RenderProgress: Sync {
 pub struct Renderer {
     pub width: u32,
     pub height: u32,
-    pub fov: u32,
     pub samples_per_pixel: u32,
     pub max_reflections: u32,
 }
@@ -30,7 +28,6 @@ impl Renderer {
         progress: &dyn RenderProgress,
     ) -> image::RgbImage {
         let bvh = BoundingVolumeHierarchy::new(scene);
-        let camera = Camera::new(scene.camera_ray, self.fov);
         progress.on_render_start();
         let pixels: Vec<Vec<_>> = (0..self.width)
             .into_par_iter()
@@ -48,14 +45,15 @@ impl Renderer {
                             let dy = rng.gen::<f32>() - 0.5;
                             let xnorm = (x + dx) / self.width as f32;
                             let ynorm = (y + dy) / self.width as f32;
+                            let ray = scene.camera.get_ray(xnorm, ynorm);
+
                             let mut tracer = PathTracer::new(
                                 &scene,
                                 &bvh,
                                 &mut rng,
                                 self.max_reflections,
                             );
-                            color = color
-                                + tracer.trace(camera.get_ray(xnorm, ynorm));
+                            color = color + tracer.trace(ray);
                         }
                         color = (color / self.samples_per_pixel as f32).clamp();
                         palette::Srgb::from_linear(color)

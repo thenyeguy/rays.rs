@@ -54,7 +54,6 @@ fn main() {
         (about: "Ray tracer in Rust")
         (@arg width: -w --width +takes_value "image width (pixels)")
         (@arg height: -h --height +takes_value "image height (pixels)")
-        (@arg fov: --fov +takes_value "field of view (degrees)")
         (@arg samples: --samples +takes_value "number of samples per pixel")
         (@arg reflections: --reflections +takes_value
             "maximum number of reflections per sample")
@@ -68,7 +67,6 @@ fn main() {
     let renderer = Renderer {
         width: value_t!(args, "width", u32).unwrap_or(100),
         height: value_t!(args, "height", u32).unwrap_or(100),
-        fov: value_t!(args, "fov", u32).unwrap_or(45),
         samples_per_pixel: value_t!(args, "samples", u32).unwrap_or(500),
         max_reflections: value_t!(args, "reflections", u32).unwrap_or(5),
     };

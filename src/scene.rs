@@ -1,11 +1,11 @@
 use palette::LinSrgb;
 
+use crate::camera::Camera;
 use crate::object::Object;
-use crate::ray::Ray;
 
 #[derive(Debug)]
 pub struct Scene {
-    pub objects: Vec<Object>,
+    pub camera: Camera,
     pub global_illumination: LinSrgb,
-    pub camera_ray: Ray,
+    pub objects: Vec<Object>,
 }

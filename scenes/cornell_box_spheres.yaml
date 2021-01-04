@@ -1,6 +1,7 @@
 camera:
-  pos: [0, 0.8, 2.9]
+  pos: [0, 0.75, 2.8]
   dir: [0, 0, -1]
+  fov: 45
 
 objects:
   - type: wavefront

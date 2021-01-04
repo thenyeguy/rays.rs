@@ -7,6 +7,7 @@ use std::path::Path;
 use palette::LinSrgb;
 use serde::Deserialize;
 
+use crate::camera::Camera;
 use crate::material::Material;
 use crate::object::Object;
 use crate::ray::Ray;
@@ -22,7 +23,6 @@ pub fn load_scene<P: AsRef<Path>>(path: P) -> Result<Scene, LoadError> {
 
 #[derive(Debug, Deserialize)]
 struct ScenePrototype {
-    #[serde(default)]
     camera: CameraPrototype,
     #[serde(default)]
     global_illumination: (f32, f32, f32),
@@ -37,10 +37,10 @@ impl Into<Result<Scene, LoadError>> for ScenePrototype {
             objects.extend(new_objects?.into_iter());
         }
         Ok(Scene {
+            camera: self.camera.into(),
             global_illumination: LinSrgb::from_components(
                 self.global_illumination,
             ),
-            camera_ray: self.camera.into(),
             objects,
         })
     }
@@ -50,20 +50,17 @@ impl Into<Result<Scene, LoadError>> for ScenePrototype {
 struct CameraPrototype {
     pos: (f32, f32, f32),
     dir: (f32, f32, f32),
+    #[serde(default = "default_fov")]
+    fov: u32,
 }
 
-impl Default for CameraPrototype {
-    fn default() -> Self {
-        CameraPrototype {
-            pos: (0.0, 0.0, 0.0),
-            dir: (0.0, 0.0, 1.0),
-        }
-    }
+fn default_fov() -> u32 {
+    60
 }
 
-impl Into<Ray> for CameraPrototype {
-    fn into(self) -> Ray {
-        Ray::new(self.pos.into(), self.dir.into())
+impl Into<Camera> for CameraPrototype {
+    fn into(self) -> Camera {
+        Camera::new(Ray::new(self.pos.into(), self.dir.into()), self.fov)
     }
 }
 
