@@ -248,3 +248,21 @@ impl fmt::Debug for Mat3 {
         write!(f, "]")
     }
 }
+
+#[derive(Copy, Clone, Debug)]
+pub enum Axis {
+    X,
+    Y,
+    Z,
+}
+
+impl Index<Axis> for Point3 {
+    type Output = f32;
+    fn index(&self, axis: Axis) -> &f32 {
+        match axis {
+            Axis::X => &self.x,
+            Axis::Y => &self.y,
+            Axis::Z => &self.z,
+        }
+    }
+}

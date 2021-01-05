@@ -54,11 +54,26 @@ impl BoundingBox {
         }
     }
 
-    pub fn volume(&self) -> f32 {
+    pub fn merge(&mut self, other: &Self) {
+        *self = BoundingBox::union(self, other);
+    }
+
+    pub fn add_point(&mut self, point: Point3) {
+        self.merge(&BoundingBox {
+            min: point,
+            max: point,
+        });
+    }
+
+    pub fn centroid(&self) -> Point3 {
+        self.min + ((self.max - self.min) / 2.0)
+    }
+
+    pub fn surface_area(&self) -> f32 {
         let x = self.max.x() - self.min.x();
         let y = self.max.y() - self.min.y();
         let z = self.max.z() - self.min.z();
-        x * y * z
+        2.0 * (x * y + x * z + y * z)
     }
 
     pub fn intersects(&self, ray: Ray) -> bool {
