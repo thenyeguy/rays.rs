@@ -6,8 +6,6 @@ use crate::ray::Ray;
 use crate::types::{Point3, Vector3};
 use crate::{increment_statistic, statistics};
 
-const EPSILON: f32 = 0.00001;
-
 #[derive(Copy, Clone, Debug)]
 pub struct Intersection {
     pub distance: f32,
@@ -59,7 +57,7 @@ impl Surface for Sphere {
         } else {
             let distance = (-b - dis.sqrt()) / 2.0;
             // Distance threshold to prevent self-intersection
-            if distance <= EPSILON {
+            if distance <= float::EPSILON {
                 return None;
             }
             let position = ray.along(distance);
@@ -110,7 +108,7 @@ impl Surface for Triangle {
 
         let pvec = ray.dir.cross(self.edge2);
         let det = self.edge1.dot(pvec);
-        if det.abs() < EPSILON {
+        if det.abs() < float::EPSILON {
             // Ray is parallel to plane.
             return None;
         }
@@ -129,7 +127,7 @@ impl Surface for Triangle {
         }
 
         let dist = self.edge2.dot(qvec) * inv_det;
-        if dist < EPSILON {
+        if dist < float::EPSILON {
             return None;
         }
 
