@@ -89,6 +89,8 @@ fn main() {
     let logger = Logger::new(&renderer, &app.profile);
     let img = renderer.render(&scene, &logger);
 
+    report_statistics();
+
     img.save(&app.output).unwrap_or_else(|e| {
         println!("Could not write file: {}", e);
         std::process::exit(1);

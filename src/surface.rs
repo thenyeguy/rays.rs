@@ -4,6 +4,7 @@ use crate::bounds::BoundingBox;
 use crate::float;
 use crate::ray::Ray;
 use crate::types::{Point3, Vector3};
+use crate::{increment_statistic, statistics};
 
 const EPSILON: f32 = 0.00001;
 
@@ -105,6 +106,8 @@ impl Surface for Triangle {
     }
 
     fn intersect(&self, ray: Ray) -> Option<Intersection> {
+        increment_statistic!(statistics::TRIANGLE_TESTS);
+
         let pvec = ray.dir.cross(self.edge2);
         let det = self.edge1.dot(pvec);
         if det.abs() < EPSILON {

@@ -1,6 +1,7 @@
 use crate::float;
 use crate::ray::Ray;
 use crate::types::Point3;
+use crate::{increment_statistic, statistics};
 
 #[derive(Clone, Debug)]
 pub struct BoundingBox {
@@ -61,6 +62,8 @@ impl BoundingBox {
     }
 
     pub fn intersects(&self, ray: Ray) -> bool {
+        increment_statistic!(statistics::BOUNDING_BOX_TESTS);
+
         let mut tmin = std::f32::NEG_INFINITY;
         let mut tmax = std::f32::INFINITY;
         for i in 0..3 {

@@ -9,6 +9,7 @@ pub mod prelude;
 pub mod ray;
 pub mod render;
 pub mod scene;
+pub mod statistics;
 pub mod surface;
 pub mod tracer;
 pub mod types;

@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Michael Nye <thenyeguy@gmail.com>"]
 edition = "2018"
 
+[features]
+statistics = []
+
 [dependencies]
 cpuprofiler = "0.0.4"
 image = "0.23.12"

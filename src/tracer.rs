@@ -3,6 +3,7 @@ use rand::Rng;
 use crate::bvh::BoundingVolumeHierarchy;
 use crate::ray::Ray;
 use crate::scene::Scene;
+use crate::{increment_statistic, statistics};
 
 pub struct PathTracer<'a, R: Rng + ?Sized> {
     scene: &'a Scene,
@@ -37,6 +38,7 @@ impl<'a, R: Rng + ?Sized> PathTracer<'a, R> {
             return self.scene.global_illumination;
         }
 
+        increment_statistic!(statistics::RAYS_CAST);
         self.reflections += 1;
         self.bvh
             .sample(ray)
