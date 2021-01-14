@@ -1,14 +1,14 @@
-use clap::{clap_app, value_t};
 use indicatif::{ProgressBar, ProgressStyle};
 use rays::prelude::*;
+use structopt::StructOpt;
 
 struct Logger {
     progress_bar: ProgressBar,
-    prof_file: String,
+    prof_file: Option<String>,
 }
 
 impl Logger {
-    fn new(renderer: &Renderer, prof_file: Option<&str>) -> Self {
+    fn new(renderer: &Renderer, prof_file: &Option<String>) -> Self {
         let progress_bar = ProgressBar::new(renderer.width as u64);
         progress_bar.set_style(
             ProgressStyle::default_bar()
@@ -16,7 +16,7 @@ impl Logger {
         );
         Logger {
             progress_bar,
-            prof_file: prof_file.map_or(String::new(), |s| s.into()),
+            prof_file: prof_file.clone(),
         }
     }
 }
@@ -25,11 +25,11 @@ impl RenderProgress for Logger {
     fn on_render_start(&self) {
         println!("Rendering image...");
         self.progress_bar.reset_elapsed();
-        if !self.prof_file.is_empty() {
+        if let Some(ref file) = self.prof_file {
             cpuprofiler::PROFILER
                 .lock()
                 .unwrap()
-                .start(self.prof_file.as_str())
+                .start(file.as_str())
                 .unwrap();
         }
     }
@@ -40,53 +40,58 @@ impl RenderProgress for Logger {
 
     fn on_render_done(&self) {
         self.progress_bar.finish();
-        if !self.prof_file.is_empty() {
+        if let Some(ref file) = self.prof_file {
             cpuprofiler::PROFILER.lock().unwrap().stop().unwrap();
-            println!("Profile saved to: {}", self.prof_file);
+            println!("Profile saved to: {}", file);
         }
     }
 }
 
+#[derive(Debug, StructOpt)]
+#[structopt(name = "rays", about = "A ray tracer in Rust")]
+struct App {
+    /// Image width, in pixels
+    #[structopt(short, long, default_value = "100")]
+    width: u32,
+    /// Image height, in pixels
+    #[structopt(short, long, default_value = "100")]
+    height: u32,
+    /// Number of samples per pixel
+    #[structopt(short, long, default_value = "500")]
+    samples: u32,
+    /// Maximum number of reflections per sample
+    #[structopt(long, default_value = "5")]
+    reflections: u32,
+    /// An optional file to write profiling information to
+    #[structopt(long)]
+    profile: Option<String>,
+    /// The scene to render
+    scene: String,
+    /// The output image file
+    output: String,
+}
+
 fn main() {
-    let args = clap_app!(rays =>
-        (version: "0.1")
-        (author: "Michael Nye <thenyeguy@gmail.com>")
-        (about: "Ray tracer in Rust")
-        (@arg width: -w --width +takes_value "image width (pixels)")
-        (@arg height: -h --height +takes_value "image height (pixels)")
-        (@arg samples: --samples +takes_value "number of samples per pixel")
-        (@arg reflections: --reflections +takes_value
-            "maximum number of reflections per sample")
-        (@arg profile: --profile +takes_value
-            "the (optional) file to write profiling information to")
-        (@arg scene: +required "the scene to render")
-        (@arg output: +required "the output file")
-    )
-    .get_matches();
-
-    let renderer = Renderer {
-        width: value_t!(args, "width", u32).unwrap_or(100),
-        height: value_t!(args, "height", u32).unwrap_or(100),
-        samples_per_pixel: value_t!(args, "samples", u32).unwrap_or(500),
-        max_reflections: value_t!(args, "reflections", u32).unwrap_or(5),
-    };
-
-    let profile = args.value_of("profile");
-    let scene_file = args.value_of("scene").unwrap();
-    let output = args.value_of("output").unwrap();
+    let app = App::from_args();
 
     println!("Loading scene...");
-    let scene = load_scene(scene_file).unwrap_or_else(|e| {
+    let scene = load_scene(&app.scene).unwrap_or_else(|e| {
         println!("Error loading scene: {}", e);
         std::process::exit(1);
     });
 
-    let logger = Logger::new(&renderer, profile);
+    let renderer = Renderer {
+        width: app.width,
+        height: app.height,
+        samples_per_pixel: app.samples,
+        max_reflections: app.reflections,
+    };
+    let logger = Logger::new(&renderer, &app.profile);
     let img = renderer.render(&scene, &logger);
 
-    img.save(&output).unwrap_or_else(|e| {
+    img.save(&app.output).unwrap_or_else(|e| {
         println!("Could not write file: {}", e);
         std::process::exit(1);
     });
-    println!("Wrote final image to: {}", output);
+    println!("Wrote final image to: {}", app.output);
 }
