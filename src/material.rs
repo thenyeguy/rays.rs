@@ -57,8 +57,10 @@ impl Material {
                 let mut dir =
                     Vector3::new(zp * theta.cos(), zp * theta.sin(), z);
 
+                // Compuate Lambert BRDF:
+                let mut intensity = 2.0 * dir.dot(int.normal);
+
                 // Ensure we sample only from a hemisphere
-                let mut intensity = dir.dot(int.normal);
                 if intensity < 0.0 {
                     dir = dir * -1.0;
                     intensity *= -1.0;
