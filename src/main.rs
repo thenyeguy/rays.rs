@@ -24,6 +24,7 @@ impl Logger {
 impl RenderProgress for Logger {
     fn on_render_start(&self) {
         println!("Rendering image...");
+        self.progress_bar.enable_steady_tick(100 /*ms*/);
         self.progress_bar.reset_elapsed();
         if let Some(ref file) = self.prof_file {
             cpuprofiler::PROFILER
