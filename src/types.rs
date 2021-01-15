@@ -60,6 +60,22 @@ impl Vector3 {
             self.x * other.y - self.y * other.x,
         )
     }
+
+    pub fn tangent_space(self) -> Mat3 {
+        let tangent = if self.x.abs() > 0.99 {
+            Vector3::new(self.y, -self.x, 0.0)
+        } else {
+            Vector3::new(0.0, self.z, -self.y)
+        };
+        let binormal = self.cross(tangent);
+        Mat3 {
+            values: [
+                [tangent.x(), binormal.x(), self.x()],
+                [tangent.y(), binormal.y(), self.y()],
+                [tangent.z(), binormal.z(), self.z()],
+            ],
+        }
+    }
 }
 
 impl From<(f32, f32, f32)> for Vector3 {

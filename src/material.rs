@@ -50,26 +50,11 @@ impl Material {
         match self.kind {
             Kind::Emissive => self.color,
             Kind::Diffuse => {
-                // Generate a random direction vector.
-                let theta = tracer.rng().gen::<f32>() * 2.0 * PI;
-                let z = tracer.rng().gen::<f32>();
-                let zp = (1.0 - z * z).sqrt();
-                let mut dir =
-                    Vector3::new(zp * theta.cos(), zp * theta.sin(), z);
-
-                // Compuate Lambert BRDF:
-                let mut intensity = 2.0 * dir.dot(int.normal);
-
-                // Ensure we sample only from a hemisphere
-                if intensity < 0.0 {
-                    dir = dir * -1.0;
-                    intensity *= -1.0;
-                }
-
-                // Recurse and combine colors.
-                self.color
-                    * intensity
-                    * tracer.trace(Ray::new(int.position, dir))
+                // Compuate Lambert BRDF with cosine sampling: this means the
+                // contribution of each ray is directly proportional to its
+                // probability.
+                let dir = sample_hemisphere(tracer.rng(), int.normal, 1.0);
+                self.color * tracer.trace(Ray::new(int.position, dir))
             }
             Kind::Specular => {
                 let dir = int.incident
@@ -78,4 +63,16 @@ impl Material {
             }
         }
     }
+}
+
+fn sample_hemisphere<R: Rng + ?Sized>(
+    rng: &mut R,
+    normal: Vector3,
+    alpha: f32,
+) -> Vector3 {
+    // Sample a hemisphere, then project about the normal vector.
+    let z = rng.gen::<f32>().powf(1.0 / (alpha + 1.0));
+    let zp = (1.0 - z * z).sqrt();
+    let theta = rng.gen::<f32>() * 2.0 * PI;
+    normal.tangent_space() * Vector3::new(zp * theta.cos(), zp * theta.sin(), z)
 }
