@@ -6,6 +6,7 @@ pub mod loader;
 pub mod material;
 pub mod object;
 pub mod prelude;
+pub mod profile;
 pub mod ray;
 pub mod render;
 pub mod scene;

@@ -4,20 +4,16 @@ use structopt::StructOpt;
 
 struct Logger {
     progress_bar: ProgressBar,
-    prof_file: Option<String>,
 }
 
 impl Logger {
-    fn new(renderer: &Renderer, prof_file: &Option<String>) -> Self {
+    fn new(renderer: &Renderer) -> Self {
         let progress_bar = ProgressBar::new(renderer.width as u64);
         progress_bar.set_style(
             ProgressStyle::default_bar()
                 .template("    [{elapsed_precise}] {wide_bar} {percent}%    "),
         );
-        Logger {
-            progress_bar,
-            prof_file: prof_file.clone(),
-        }
+        Logger { progress_bar }
     }
 }
 
@@ -26,13 +22,6 @@ impl RenderProgress for Logger {
         println!("Rendering image...");
         self.progress_bar.enable_steady_tick(100 /*ms*/);
         self.progress_bar.reset_elapsed();
-        if let Some(ref file) = self.prof_file {
-            cpuprofiler::PROFILER
-                .lock()
-                .unwrap()
-                .start(file.as_str())
-                .unwrap();
-        }
     }
 
     fn on_col_done(&self) {
@@ -41,10 +30,6 @@ impl RenderProgress for Logger {
 
     fn on_render_done(&self) {
         self.progress_bar.finish();
-        if let Some(ref file) = self.prof_file {
-            cpuprofiler::PROFILER.lock().unwrap().stop().unwrap();
-            println!("Profile saved to: {}", file);
-        }
     }
 }
 
@@ -63,9 +48,6 @@ struct App {
     /// Maximum number of reflections per sample
     #[structopt(long, default_value = "5")]
     reflections: u32,
-    /// An optional file to write profiling information to
-    #[structopt(long)]
-    profile: Option<String>,
     /// The scene to render
     scene: String,
     /// The output image file
@@ -87,7 +69,7 @@ fn main() {
         samples_per_pixel: app.samples,
         max_reflections: app.reflections,
     };
-    let logger = Logger::new(&renderer, &app.profile);
+    let logger = Logger::new(&renderer);
     let img = renderer.render(&scene, &logger);
 
     report_statistics();

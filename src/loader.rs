@@ -10,15 +10,19 @@ use serde::Deserialize;
 use crate::camera::Camera;
 use crate::material::Material;
 use crate::object::Object;
+use crate::profile;
 use crate::ray::Ray;
 use crate::scene::Scene;
 use crate::surface::*;
 use crate::wavefront::WavefrontObject;
 
 pub fn load_scene<P: AsRef<Path>>(path: P) -> Result<Scene, LoadError> {
+    profile::start("load.prof");
     let file = File::open(path)?;
     let scene_prototype: ScenePrototype = serde_yaml::from_reader(&file)?;
-    scene_prototype.into()
+    let scene = scene_prototype.into();
+    profile::end();
+    scene
 }
 
 #[derive(Debug, Deserialize)]

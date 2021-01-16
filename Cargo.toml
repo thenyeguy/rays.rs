@@ -5,10 +5,11 @@ authors = ["Michael Nye <thenyeguy@gmail.com>"]
 edition = "2018"
 
 [features]
+profile = ["cpuprofiler"]
 statistics = []
 
 [dependencies]
-cpuprofiler = "0.0.4"
+cpuprofiler = { version = "0.0.4", optional = true }
 image = "0.23.12"
 indicatif = "0.15.0"
 palette = "0.5.0"
