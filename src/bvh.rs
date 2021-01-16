@@ -102,6 +102,7 @@ impl Bin {
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn partition(
     objects: Vec<(BoundingBox, Object)>,
 ) -> (Vec<(BoundingBox, Object)>, Vec<(BoundingBox, Object)>) {
