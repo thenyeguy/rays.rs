@@ -7,6 +7,7 @@ use std::path::Path;
 use palette::LinSrgb;
 use serde::Deserialize;
 
+use crate::bvh::BoundingVolumeHierarchy;
 use crate::camera::Camera;
 use crate::material::Material;
 use crate::object::Object;
@@ -45,7 +46,7 @@ impl Into<Result<Scene, LoadError>> for ScenePrototype {
             global_illumination: LinSrgb::from_components(
                 self.global_illumination,
             ),
-            objects,
+            objects: BoundingVolumeHierarchy::new(objects),
         })
     }
 }

@@ -3,7 +3,6 @@ use rand::{Rng, SeedableRng};
 use rayon::prelude::*;
 use std::f32;
 
-use crate::bvh::BoundingVolumeHierarchy;
 use crate::profile;
 use crate::scene::Scene;
 use crate::tracer::PathTracer;
@@ -28,7 +27,6 @@ impl Renderer {
         scene: &Scene,
         progress: &dyn RenderProgress,
     ) -> image::RgbImage {
-        let bvh = BoundingVolumeHierarchy::new(scene);
         profile::start("render.prof");
         progress.on_render_start();
         let pixels: Vec<Vec<_>> = (0..self.width)
@@ -51,7 +49,6 @@ impl Renderer {
 
                             let mut tracer = PathTracer::new(
                                 &scene,
-                                &bvh,
                                 &mut rng,
                                 self.max_reflections,
                             );

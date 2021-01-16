@@ -2,19 +2,17 @@ use crate::bounds::BoundingBox;
 use crate::float;
 use crate::object::{Object, Sample};
 use crate::ray::Ray;
-use crate::scene::Scene;
 use crate::types::Axis;
 
 #[derive(Debug)]
-pub struct BoundingVolumeHierarchy<'a> {
-    root: Box<BvhNode<'a>>,
+pub struct BoundingVolumeHierarchy {
+    root: Box<BvhNode>,
 }
 
-impl<'a> BoundingVolumeHierarchy<'a> {
-    pub fn new(scene: &'a Scene) -> Self {
-        let objects = scene
-            .objects
-            .iter()
+impl BoundingVolumeHierarchy {
+    pub fn new(objects: Vec<Object>) -> Self {
+        let objects = objects
+            .into_iter()
             .map(|obj| (obj.surface.bounding_box(), obj))
             .collect();
         BoundingVolumeHierarchy {
@@ -28,15 +26,15 @@ impl<'a> BoundingVolumeHierarchy<'a> {
 }
 
 #[derive(Debug)]
-enum BvhNode<'a> {
-    Node(BoundingBox, Box<BvhNode<'a>>, Box<BvhNode<'a>>),
-    Leaf(&'a Object),
+enum BvhNode {
+    Node(BoundingBox, Box<BvhNode>, Box<BvhNode>),
+    Leaf(Object),
 }
 
-impl<'a> BvhNode<'a> {
-    fn new(objects: Vec<(BoundingBox, &'a Object)>) -> Box<Self> {
+impl BvhNode {
+    fn new(mut objects: Vec<(BoundingBox, Object)>) -> Box<Self> {
         if objects.len() == 1 {
-            Box::new(BvhNode::Leaf(objects[0].1))
+            Box::new(BvhNode::Leaf(objects.remove(0).1))
         } else {
             let bb = objects
                 .iter()
@@ -73,7 +71,7 @@ impl<'a> BvhNode<'a> {
                     None
                 }
             }
-            BvhNode::Leaf(obj) => obj.sample(ray),
+            BvhNode::Leaf(ref obj) => obj.sample(ray),
         }
     }
 }
@@ -105,8 +103,8 @@ impl Bin {
 }
 
 fn partition(
-    objects: Vec<(BoundingBox, &Object)>,
-) -> (Vec<(BoundingBox, &Object)>, Vec<(BoundingBox, &Object)>) {
+    objects: Vec<(BoundingBox, Object)>,
+) -> (Vec<(BoundingBox, Object)>, Vec<(BoundingBox, Object)>) {
     let centroid_bb = objects.iter().map(|(bb, _obj)| bb.centroid()).fold(
         BoundingBox::empty(),
         |mut bb, centroid| {
