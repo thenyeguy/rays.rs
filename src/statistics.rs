@@ -22,6 +22,7 @@ macro_rules! print_statistic {
 
 pub fn report_statistics() {
     if cfg!(feature = "statistics") {
+        println!();
         println!("Statistics:");
         print_statistic!("Rays cast:", RAYS_CAST);
         print_statistic!("Bounding box tests:", BOUNDING_BOX_TESTS);

@@ -7,12 +7,6 @@ use crate::profile;
 use crate::scene::Scene;
 use crate::tracer::PathTracer;
 
-pub trait RenderProgress: Sync {
-    fn on_render_start(&self);
-    fn on_col_done(&self);
-    fn on_render_done(&self);
-}
-
 #[derive(Clone, Debug)]
 pub struct Renderer {
     pub width: u32,
@@ -22,13 +16,11 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn render(
-        &self,
-        scene: &Scene,
-        progress: &dyn RenderProgress,
-    ) -> image::RgbImage {
+    pub fn render<F>(&self, scene: &Scene, on_col_done: F) -> image::RgbImage
+    where
+        F: Fn() + Sync,
+    {
         profile::start("render.prof");
-        progress.on_render_start();
         let pixels: Vec<Vec<_>> = (0..self.width)
             .into_par_iter()
             .map(|i| {
@@ -60,12 +52,11 @@ impl Renderer {
                             .into_raw()
                     })
                     .collect();
-                progress.on_col_done();
+                on_col_done();
                 col
             })
             .collect();
         profile::end();
-        progress.on_render_done();
 
         let mut image = image::ImageBuffer::new(self.width, self.height);
         for i in 0..self.width {

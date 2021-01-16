@@ -1,35 +1,65 @@
+use console::style;
 use indicatif::{ProgressBar, ProgressStyle};
 use rays::prelude::*;
 use structopt::StructOpt;
 
-struct Logger {
-    progress_bar: ProgressBar,
-}
+struct LoadProgress(ProgressBar);
 
-impl Logger {
-    fn new(renderer: &Renderer) -> Self {
-        let progress_bar = ProgressBar::new(renderer.width as u64);
-        progress_bar.set_style(
-            ProgressStyle::default_bar()
-                .template("    [{elapsed_precise}] {wide_bar} {percent}%    "),
+impl LoadProgress {
+    fn new() -> Self {
+        let bar = ProgressBar::new_spinner().with_style(
+            ProgressStyle::default_spinner()
+                .tick_strings(&["", ".", "..", "...", ""])
+                .template(" {prefix:.cyan.bold} {msg}{spinner}"),
         );
-        Logger { progress_bar }
+        bar.set_prefix("[1/3]");
+        bar.set_message("Loading scene");
+        bar.enable_steady_tick(500 /*ms*/);
+        LoadProgress(bar)
     }
 }
 
-impl RenderProgress for Logger {
-    fn on_render_start(&self) {
-        println!("Rendering image...");
-        self.progress_bar.enable_steady_tick(100 /*ms*/);
-        self.progress_bar.reset_elapsed();
+impl Drop for LoadProgress {
+    fn drop(&mut self) {
+        self.0.set_style(
+            ProgressStyle::default_spinner()
+                .template(" {prefix:.green.bold} {msg}"),
+        );
+        self.0.finish_with_message("Load complete");
+    }
+}
+
+struct RenderProgress(ProgressBar);
+
+impl RenderProgress {
+    fn new(image_width: u32) -> Self {
+        let bar = ProgressBar::new(image_width as u64).with_style(
+            ProgressStyle::default_bar()
+                .template(concat!(
+                    " {prefix:.cyan.bold} {msg}",
+                    "   {bar:50.dim/black.bright}",
+                    "   {percent}% ({elapsed_precise}) "
+                ))
+                .progress_chars("━╾╶"),
+        );
+        bar.set_prefix("[2/3]");
+        bar.set_message("Rendering image");
+        bar.enable_steady_tick(100 /*ms*/);
+        RenderProgress(bar)
     }
 
-    fn on_col_done(&self) {
-        self.progress_bar.inc(1);
+    fn tick(&self) {
+        self.0.inc(1);
     }
+}
 
-    fn on_render_done(&self) {
-        self.progress_bar.finish();
+impl Drop for RenderProgress {
+    fn drop(&mut self) {
+        self.0.set_style(
+            ProgressStyle::default_bar()
+                .template(" {prefix:.green.bold} {msg} ({elapsed_precise})"),
+        );
+        self.0.finish_with_message("Render complete");
     }
 }
 
@@ -56,27 +86,36 @@ struct App {
 
 fn main() {
     let app = App::from_args();
-
-    println!("Loading scene...");
-    let scene = load_scene(&app.scene).unwrap_or_else(|e| {
-        println!("Error loading scene: {}", e);
-        std::process::exit(1);
-    });
-
     let renderer = Renderer {
         width: app.width,
         height: app.height,
         samples_per_pixel: app.samples,
         max_reflections: app.reflections,
     };
-    let logger = Logger::new(&renderer);
-    let img = renderer.render(&scene, &logger);
 
-    report_statistics();
+    let scene = {
+        let _progress = LoadProgress::new();
+        load_scene(&app.scene).unwrap_or_else(|e| {
+            println!("Error loading scene: {}", e);
+            std::process::exit(1);
+        })
+    };
+
+    let img = {
+        let progress = RenderProgress::new(renderer.width);
+        renderer.render(&scene, || progress.tick())
+    };
 
     img.save(&app.output).unwrap_or_else(|e| {
         println!("Could not write file: {}", e);
         std::process::exit(1);
     });
-    println!("Wrote final image to: {}", app.output);
+    println!(
+        " {} Saved image to {}",
+        style("[3/3]").green().bold(),
+        app.output
+    );
+
+    report_statistics();
+    report_traces();
 }

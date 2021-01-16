@@ -16,3 +16,13 @@ pub fn end() {
         cpuprofiler::PROFILER.lock().unwrap().stop().unwrap();
     }
 }
+
+pub fn report_traces() {
+    #[cfg(feature = "profile")]
+    {
+        println!();
+        println!("Traces:");
+        println!("  Scene load:   load.prof");
+        println!("  Image render: render.prof");
+    }
+}

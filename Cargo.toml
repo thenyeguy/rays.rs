@@ -9,6 +9,7 @@ profile = ["cpuprofiler"]
 statistics = []
 
 [dependencies]
+console = "0.14.0"
 cpuprofiler = { version = "0.0.4", optional = true }
 image = "0.23.12"
 indicatif = "0.15.0"
