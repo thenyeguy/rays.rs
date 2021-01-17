@@ -10,8 +10,11 @@ use crate::types::Vector3;
 #[derive(Copy, Clone, Debug)]
 enum Kind {
     Emissive,
-    Diffuse,
-    Specular,
+    Reflective {
+        index: f32,
+        roughness: f32,
+        metallic: bool,
+    },
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -29,16 +32,34 @@ impl Material {
     }
 
     pub fn diffuse(color: LinSrgb) -> Self {
-        Material {
-            color,
-            kind: Kind::Diffuse,
-        }
+        Material::glossy(color, 1.0, 1.0)
     }
 
     pub fn specular(color: LinSrgb) -> Self {
+        Material::metallic(color, 1.5, 0.0)
+    }
+
+    pub fn glossy(color: LinSrgb, index: f32, roughness: f32) -> Self {
+        let metallic = false;
         Material {
             color,
-            kind: Kind::Specular,
+            kind: Kind::Reflective {
+                index,
+                roughness,
+                metallic,
+            },
+        }
+    }
+
+    pub fn metallic(color: LinSrgb, index: f32, roughness: f32) -> Self {
+        let metallic = true;
+        Material {
+            color,
+            kind: Kind::Reflective {
+                index,
+                roughness,
+                metallic,
+            },
         }
     }
 
@@ -49,17 +70,34 @@ impl Material {
     ) -> LinSrgb {
         match self.kind {
             Kind::Emissive => self.color,
-            Kind::Diffuse => {
-                // Compuate Lambert BRDF with cosine sampling: this means the
-                // contribution of each ray is directly proportional to its
-                // probability.
-                let dir = sample_hemisphere(tracer.rng(), int.normal, 1.0);
-                self.color * tracer.trace(Ray::new(int.position, dir))
-            }
-            Kind::Specular => {
-                let dir = int.incident
-                    - 2.0 * int.normal.dot(int.incident) * int.normal;
-                self.color * tracer.trace(Ray::new(int.position, dir))
+            Kind::Reflective {
+                index,
+                roughness,
+                metallic,
+            } => {
+                // Estimate the Fresnel coefficient of the surface normal, and
+                // use it to weight the specularity.
+                let f0 = if metallic {
+                    (self.color.red + self.color.green + self.color.blue) / 3.0
+                } else {
+                    ((1.0 - index) / (1.0 + index)).powi(2)
+                };
+                let dot = int.normal.dot(int.incident).abs();
+                let fresnel = f0 + (1.0 - f0) * (1.0 - dot).powi(5);
+                if tracer.rng().gen::<f32>() < fresnel {
+                    // Specular: Phong-Blinn BRDF.
+                    let reflected = int.incident
+                        - 2.0 * int.normal.dot(int.incident) * int.normal;
+                    let dir =
+                        sample_hemisphere(tracer.rng(), reflected, roughness);
+                    tracer.trace(Ray::new(int.position, dir))
+                } else if !metallic {
+                    // Diffuse: Lambert BRDF with cosine sampling.
+                    let dir = sample_hemisphere(tracer.rng(), int.normal, 1.0);
+                    self.color * tracer.trace(Ray::new(int.position, dir))
+                } else {
+                    LinSrgb::new(0.0, 0.0, 0.0)
+                }
             }
         }
     }

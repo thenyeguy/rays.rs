@@ -174,19 +174,8 @@ fn load_wavefront(path: &Path) -> Result<Vec<Object>, LoadError> {
         tobj::load_obj(path, /*triangulate_faces=*/ true)?;
 
     let default_material = Material::diffuse(LinSrgb::new(1.0, 1.0, 1.0));
-    let materials: Vec<_> = raw_materials
-        .into_iter()
-        .map(|m| {
-            let emissive = emissive_color(&m);
-            if is_color_set(&emissive) {
-                Material::light(to_color(&emissive))
-            } else if is_color_set(&m.specular) {
-                Material::specular(to_color(&m.specular))
-            } else {
-                Material::diffuse(to_color(&m.diffuse))
-            }
-        })
-        .collect();
+    let materials: Vec<_> =
+        raw_materials.iter().map(|m| convert_material(m)).collect();
 
     let mut objects = Vec::new();
     for model in models.iter() {
@@ -228,6 +217,20 @@ fn mesh_normal(mesh: &tobj::Mesh, i: usize) -> Vector3 {
     )
 }
 
+fn convert_material(m: &tobj::Material) -> Material {
+    let emissive = emissive_color(&m);
+    if color_power(&emissive) > 0.0 {
+        return Material::light(to_color(&emissive));
+    }
+
+    let roughness = m.shininess;
+    if color_power(&m.specular) > 5.0 * color_power(&m.diffuse) {
+        Material::metallic(to_color(&m.specular), m.optical_density, roughness)
+    } else {
+        Material::glossy(to_color(&m.diffuse), m.optical_density, roughness)
+    }
+}
+
 fn emissive_color(material: &tobj::Material) -> [f32; 3] {
     let black = [0.0; 3];
     material
@@ -251,8 +254,8 @@ fn to_color(c: &[f32; 3]) -> LinSrgb {
     LinSrgb::new(c[0], c[1], c[2])
 }
 
-fn is_color_set(color: &[f32; 3]) -> bool {
-    color[0] > 0.0 || color[1] > 0.0 || color[2] > 0.0
+fn color_power(color: &[f32; 3]) -> f32 {
+    color[0].powi(2) + color[1].powi(2) + color[2].powi(2)
 }
 
 #[derive(Debug)]
