@@ -19,9 +19,10 @@ use crate::wavefront::WavefrontObject;
 
 pub fn load_scene<P: AsRef<Path>>(path: P) -> Result<Scene, LoadError> {
     profile::start("load.prof");
-    let file = File::open(path)?;
+    let root: &Path = path.as_ref();
+    let file = File::open(root.join("scene.yaml"))?;
     let scene_prototype: ScenePrototype = serde_yaml::from_reader(&file)?;
-    let scene = scene_prototype.into();
+    let scene = scene_prototype.compile(root);
     profile::end();
     scene
 }
@@ -34,11 +35,11 @@ struct ScenePrototype {
     objects: Vec<ObjectPrototype>,
 }
 
-impl Into<Result<Scene, LoadError>> for ScenePrototype {
-    fn into(self) -> Result<Scene, LoadError> {
+impl ScenePrototype {
+    fn compile(self, root: &Path) -> Result<Scene, LoadError> {
         let mut objects = Vec::new();
         for object in self.objects {
-            let new_objects: Result<Vec<Object>, LoadError> = object.into();
+            let new_objects: Result<Vec<Object>, LoadError> = object.load(root);
             objects.extend(new_objects?.into_iter());
         }
         Ok(Scene {
@@ -97,8 +98,8 @@ enum SurfacePrototype {
     },
 }
 
-impl Into<Result<Vec<Object>, LoadError>> for ObjectPrototype {
-    fn into(self) -> Result<Vec<Object>, LoadError> {
+impl ObjectPrototype {
+    fn load(self, root: &Path) -> Result<Vec<Object>, LoadError> {
         let mut objects = Vec::new();
         match self.surface {
             SurfacePrototype::Sphere {
@@ -131,7 +132,8 @@ impl Into<Result<Vec<Object>, LoadError>> for ObjectPrototype {
                 objects.push(Object::new(Triangle::new([v0, v2, v3]), mat));
             }
             SurfacePrototype::Wavefront { obj_file } => {
-                let wavefront_object = WavefrontObject::from_path(obj_file)?;
+                let wavefront_object =
+                    WavefrontObject::from_path(root.join(obj_file))?;
                 for object in wavefront_object.compile() {
                     objects.push(object);
                 }

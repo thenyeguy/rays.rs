@@ -18,5 +18,5 @@ objects:
       - [ 7, 0, -7]
     material: { type: diffuse, color: [1, 1, 1] }
   - type: wavefront
-    obj_file: obj/teapot.obj
+    obj_file: teapot.obj
     material: { type: diffuse, color: [1, 1, 1] }
