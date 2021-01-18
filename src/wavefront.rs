@@ -79,11 +79,16 @@ impl WavefrontObject {
     }
 
     pub fn compile(self) -> Vec<Object> {
+        let materials: HashMap<String, Material> = self
+            .materials
+            .into_iter()
+            .map(|(name, mat)| (name, mat.as_rays_material()))
+            .collect();
         let mut objects = Vec::new();
         for face in self.faces {
             objects.push(Object::new(
                 Triangle::new(face.vertices),
-                self.materials[&face.material].as_rays_material(),
+                materials[&face.material],
             ));
         }
         objects
