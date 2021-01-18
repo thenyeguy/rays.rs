@@ -19,3 +19,4 @@ rayon = "1.5.0"
 serde = { version = "1.0.118", features = ["derive"] }
 serde_yaml = "0.8.14"
 structopt = "0.3"
+tobj = "2.0.3"

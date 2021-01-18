@@ -14,4 +14,3 @@ pub mod statistics;
 pub mod surface;
 pub mod tracer;
 pub mod types;
-pub mod wavefront;

@@ -1,8 +1,9 @@
 use std::error;
-use std::fmt;
+use std::fmt::{self, Debug};
 use std::fs::File;
 use std::io;
 use std::path::Path;
+use std::str::FromStr;
 
 use palette::LinSrgb;
 use serde::Deserialize;
@@ -15,7 +16,7 @@ use crate::profile;
 use crate::ray::Ray;
 use crate::scene::Scene;
 use crate::surface::*;
-use crate::wavefront::WavefrontObject;
+use crate::types::Point3;
 
 pub fn load_scene<P: AsRef<Path>>(path: P) -> Result<Scene, LoadError> {
     profile::start("load.prof");
@@ -132,9 +133,7 @@ impl ObjectPrototype {
                 objects.push(Object::new(Triangle::new([v0, v2, v3]), mat));
             }
             SurfacePrototype::Wavefront { obj_file } => {
-                let wavefront_object =
-                    WavefrontObject::from_path(root.join(obj_file))?;
-                for object in wavefront_object.compile() {
+                for object in load_wavefront(&root.join(obj_file))? {
                     objects.push(object);
                 }
             }
@@ -170,9 +169,82 @@ impl Into<Material> for MaterialPrototype {
     }
 }
 
+fn load_wavefront(path: &Path) -> Result<Vec<Object>, LoadError> {
+    let (models, raw_materials) =
+        tobj::load_obj(path, /*triangulate_faces=*/ true)?;
+
+    let default_material = Material::diffuse(LinSrgb::new(1.0, 1.0, 1.0));
+    let materials: Vec<_> = raw_materials
+        .into_iter()
+        .map(|m| {
+            let emissive = emissive_color(&m);
+            if is_color_set(&emissive) {
+                Material::light(to_color(&emissive))
+            } else if is_color_set(&m.specular) {
+                Material::specular(to_color(&m.specular))
+            } else {
+                Material::diffuse(to_color(&m.diffuse))
+            }
+        })
+        .collect();
+
+    let mut objects = Vec::new();
+    for model in models.iter() {
+        let material = model
+            .mesh
+            .material_id
+            .map(|idx| materials.get(idx))
+            .flatten()
+            .unwrap_or(&default_material);
+        let mesh = &model.mesh;
+        for i in (0..mesh.indices.len()).step_by(3) {
+            let v = |j| mesh_vertex(mesh, mesh.indices[j] as usize);
+            let surface = Triangle::new([v(i), v(i + 1), v(i + 2)]);
+            objects.push(Object::new(surface, *material));
+        }
+    }
+    Ok(objects)
+}
+
+fn mesh_vertex(mesh: &tobj::Mesh, i: usize) -> Point3 {
+    Point3::new(
+        mesh.positions[3 * i],
+        mesh.positions[3 * i + 1],
+        mesh.positions[3 * i + 2],
+    )
+}
+
+fn emissive_color(material: &tobj::Material) -> [f32; 3] {
+    let black = [0.0; 3];
+    material
+        .unknown_param
+        .get("Ke")
+        .map_or(black, |ke| parse_triple(ke).unwrap_or(black))
+}
+
+fn parse_triple<T: Default + FromStr>(s: &str) -> Option<[T; 3]> {
+    let mut result = [T::default(), T::default(), T::default()];
+    for (i, v) in s.split_whitespace().enumerate().take(3) {
+        match v.parse() {
+            Ok(f) => result[i] = f,
+            _ => return None,
+        }
+    }
+    Some(result)
+}
+
+fn to_color(c: &[f32; 3]) -> LinSrgb {
+    LinSrgb::new(c[0], c[1], c[2])
+}
+
+fn is_color_set(color: &[f32; 3]) -> bool {
+    color[0] > 0.0 || color[1] > 0.0 || color[2] > 0.0
+}
+
 #[derive(Debug)]
 pub enum LoadError {
     Io(io::Error),
+    Wavefront(tobj::LoadError),
     Yaml(serde_yaml::Error),
 }
 
@@ -188,10 +260,19 @@ impl From<serde_yaml::Error> for LoadError {
     }
 }
 
+impl From<tobj::LoadError> for LoadError {
+    fn from(e: tobj::LoadError) -> Self {
+        LoadError::Wavefront(e)
+    }
+}
+
 impl fmt::Display for LoadError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             LoadError::Io(ref err) => write!(f, "IO error: {}", err),
+            LoadError::Wavefront(ref err) => {
+                write!(f, "Wavefront error: {}", err)
+            }
             LoadError::Yaml(ref err) => write!(f, "Yaml error: {}", err),
         }
     }
@@ -201,6 +282,7 @@ impl error::Error for LoadError {
     fn cause(&self) -> Option<&dyn error::Error> {
         match *self {
             LoadError::Io(ref err) => Some(err),
+            LoadError::Wavefront(ref err) => Some(err),
             LoadError::Yaml(ref err) => Some(err),
         }
     }
