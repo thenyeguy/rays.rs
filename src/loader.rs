@@ -16,7 +16,7 @@ use crate::profile;
 use crate::ray::Ray;
 use crate::scene::Scene;
 use crate::surface::*;
-use crate::types::Point3;
+use crate::types::{Point3, Vector3};
 
 pub fn load_scene<P: AsRef<Path>>(path: P) -> Result<Scene, LoadError> {
     profile::start("load.prof");
@@ -190,16 +190,22 @@ fn load_wavefront(path: &Path) -> Result<Vec<Object>, LoadError> {
 
     let mut objects = Vec::new();
     for model in models.iter() {
-        let material = model
-            .mesh
+        let mesh = &model.mesh;
+        let material = mesh
             .material_id
             .map(|idx| materials.get(idx))
             .flatten()
             .unwrap_or(&default_material);
-        let mesh = &model.mesh;
         for i in (0..mesh.indices.len()).step_by(3) {
             let v = |j| mesh_vertex(mesh, mesh.indices[j] as usize);
-            let surface = Triangle::new([v(i), v(i + 1), v(i + 2)]);
+            let n = |j| mesh_normal(mesh, mesh.indices[j] as usize);
+            let vertices = [v(i), v(i + 1), v(i + 2)];
+            let surface = if mesh.normals.is_empty() {
+                Triangle::new(vertices)
+            } else {
+                let normals = [n(i), n(i + 1), n(i + 2)];
+                Triangle::with_normals(vertices, normals)
+            };
             objects.push(Object::new(surface, *material));
         }
     }
@@ -211,6 +217,14 @@ fn mesh_vertex(mesh: &tobj::Mesh, i: usize) -> Point3 {
         mesh.positions[3 * i],
         mesh.positions[3 * i + 1],
         mesh.positions[3 * i + 2],
+    )
+}
+
+fn mesh_normal(mesh: &tobj::Mesh, i: usize) -> Vector3 {
+    Vector3::new(
+        mesh.normals[3 * i],
+        mesh.normals[3 * i + 1],
+        mesh.normals[3 * i + 2],
     )
 }
 

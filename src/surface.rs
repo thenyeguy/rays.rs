@@ -76,18 +76,30 @@ pub struct Triangle {
     vertex: Point3,
     edge1: Vector3,
     edge2: Vector3,
-    normal: Vector3,
+    normals: [Vector3; 3],
 }
 
 impl Triangle {
     pub fn new(vertices: [Point3; 3]) -> Self {
         let e1 = vertices[1] - vertices[0];
         let e2 = vertices[2] - vertices[0];
+        let n = e1.cross(e2).normalize();
         Triangle {
             vertex: vertices[0],
             edge1: e1,
             edge2: e2,
-            normal: e1.cross(e2).normalize(),
+            normals: [n, n, n],
+        }
+    }
+
+    pub fn with_normals(vertices: [Point3; 3], normals: [Vector3; 3]) -> Self {
+        let e1 = vertices[1] - vertices[0];
+        let e2 = vertices[2] - vertices[0];
+        Triangle {
+            vertex: vertices[0],
+            edge1: e1,
+            edge2: e2,
+            normals,
         }
     }
 }
@@ -126,16 +138,21 @@ impl Surface for Triangle {
             return None;
         }
 
-        let dist = self.edge2.dot(qvec) * inv_det;
-        if dist < float::EPSILON {
+        let distance = self.edge2.dot(qvec) * inv_det;
+        if distance < float::EPSILON {
             return None;
         }
 
+        let w = 1.0 - u - v;
+        let normal =
+            (w * self.normals[0] + u * self.normals[1] + v * self.normals[2])
+                .normalize();
+
         Some(Intersection {
-            distance: dist,
-            position: ray.along(dist),
+            distance,
+            position: ray.along(distance),
             incident: ray.dir,
-            normal: if det > 0.0 { self.normal } else { -self.normal },
+            normal,
         })
     }
 }
