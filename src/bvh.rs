@@ -106,15 +106,16 @@ impl Bin {
 fn partition(
     objects: Vec<(BoundingBox, Object)>,
 ) -> (Vec<(BoundingBox, Object)>, Vec<(BoundingBox, Object)>) {
-    let centroid_bb = objects.iter().map(|(bb, _obj)| bb.centroid()).fold(
+    let centroids = objects.iter().map(|(bb, _obj)| bb.centroid()).fold(
         BoundingBox::empty(),
         |mut bb, centroid| {
             bb.add_point(centroid);
             bb
         },
     );
-    let axis = widest_axis(&centroid_bb);
-    let (axis_min, axis_max) = (centroid_bb.min[axis], centroid_bb.max[axis]);
+
+    let axis = widest_axis(&centroids);
+    let (axis_min, axis_max) = (centroids.min[axis], centroids.max[axis]);
     let bin_size = (axis_max - axis_min) / NUM_BINS as f32;
 
     if bin_size < float::EPSILON {
@@ -125,16 +126,11 @@ fn partition(
         let mut assignments = Vec::with_capacity(objects.len());
         let mut bins: Vec<_> = (0..NUM_BINS).map(|_| Bin::empty()).collect();
         for (bb, _) in objects.iter() {
-            let centroid = bb.centroid();
-            for (i, bin) in bins.iter_mut().enumerate() {
-                let boundary = axis_min + bin_size * (i + 1) as f32;
-                if centroid[axis] <= boundary + float::EPSILON {
-                    assignments.push(i);
-                    bin.bb.merge(&bb);
-                    bin.count += 1;
-                    break;
-                }
-            }
+            let relative_pos = bb.centroid()[axis] - axis_min;
+            let bin = (relative_pos / bin_size - float::EPSILON) as usize;
+            assignments.push(bin);
+            bins[bin].bb.merge(&bb);
+            bins[bin].count += 1;
         }
 
         let partition_idx = best_partition(&bins);
@@ -153,9 +149,9 @@ fn partition(
 
 fn widest_axis(bb: &BoundingBox) -> Axis {
     let extent = bb.max - bb.min;
-    if extent[0] > extent[1] && extent[0] > extent[2] {
+    if extent.x() > extent.y() && extent.x() > extent.z() {
         Axis::X
-    } else if extent[1] > extent[2] {
+    } else if extent.y() > extent.z() {
         Axis::Y
     } else {
         Axis::Z
