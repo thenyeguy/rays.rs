@@ -223,7 +223,7 @@ fn convert_material(m: &tobj::Material) -> Material {
         return Material::light(to_color(&emissive));
     }
 
-    let roughness = m.shininess;
+    let roughness = (2.0 / (2.0 + m.shininess)).sqrt();
     if color_power(&m.specular) > 5.0 * color_power(&m.diffuse) {
         Material::metallic(to_color(&m.specular), m.optical_density, roughness)
     } else {
