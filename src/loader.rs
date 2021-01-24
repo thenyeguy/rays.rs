@@ -224,7 +224,13 @@ fn convert_material(m: &tobj::Material) -> Material {
     }
 
     let roughness = (2.0 / (2.0 + m.shininess)).sqrt();
-    if color_power(&m.specular) > 5.0 * color_power(&m.diffuse) {
+    if m.illumination_model == Some(7) {
+        Material::transparent(
+            to_color(&m.specular),
+            m.optical_density,
+            roughness,
+        )
+    } else if color_power(&m.specular) > 5.0 * color_power(&m.diffuse) {
         Material::metallic(to_color(&m.specular), m.optical_density, roughness)
     } else {
         Material::glossy(to_color(&m.diffuse), m.optical_density, roughness)

@@ -65,17 +65,10 @@ impl Vector3 {
         incident - 2.0 * self.dot(incident) * self
     }
 
-    pub fn refract(self, incident: Vector3, index: f32) -> Option<Vector3> {
-        let mut cosi = self.dot(incident);
-        let eta = if cosi < 0.0 {
-            cosi *= -1.0;
-            1.0 / index
-        } else {
-            index
-        };
+    pub fn refract(self, incident: Vector3, eta: f32) -> Option<Vector3> {
+        let cosi = self.dot(incident).abs();
         let cost2 = 1.0 - eta.powi(2) * (1.0 - cosi.powi(2));
         if cost2 < 0.0 {
-            // Total internal reflection.
             None
         } else {
             Some(eta * incident + (eta * cosi - cost2.sqrt()) * self)
