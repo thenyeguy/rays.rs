@@ -90,8 +90,7 @@ impl Material {
                     // reflected ray.
                     let microfacet =
                         sample_ggx(tracer.rng(), int.normal, roughness);
-                    let outgoing = int.incident
-                        - 2.0 * microfacet.dot(int.incident) * microfacet;
+                    let outgoing = microfacet.reflect(int.incident);
 
                     // Validate this ray is visible.
                     let m_dot_o = microfacet.dot(outgoing);
