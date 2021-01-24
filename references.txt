@@ -1,0 +1,8 @@
+Microfacet Models for Refraction through Rough Surfaces
+http://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf
+
+Importance Sampling techniques for GGX with Smith Masking-Shadowing
+https://schuttejoe.github.io/post/ggximportancesamplingpart1/
+
+McGuire Computer Graphics Archive
+https://casual-effects.com/data/
