@@ -1,13 +1,21 @@
 use palette::LinSrgb;
 use rand::Rng;
 use std::f32::consts::PI;
+use std::sync::Arc;
 
 use crate::ray::Ray;
 use crate::surface::Intersection;
+use crate::texture::{Texture, TextureCoords};
 use crate::tracer::PathTracer;
 use crate::types::Vector3;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
+pub enum Color {
+    Solid(LinSrgb),
+    Texture(Arc<Texture>),
+}
+
+#[derive(Clone, Debug)]
 enum Kind {
     Emissive,
     GGX {
@@ -18,29 +26,46 @@ enum Kind {
     },
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Material {
-    color: LinSrgb,
+    color: Color,
     kind: Kind,
 }
 
+impl Color {
+    pub fn solid(color: LinSrgb) -> Self {
+        Color::Solid(color)
+    }
+
+    pub fn texture(texture: Texture) -> Self {
+        Color::Texture(Arc::new(texture))
+    }
+
+    fn sample(&self, coords: TextureCoords) -> LinSrgb {
+        match self {
+            Color::Solid(color) => *color,
+            Color::Texture(ref texture) => texture[coords],
+        }
+    }
+}
+
 impl Material {
-    pub fn light(color: LinSrgb) -> Self {
+    pub fn light(color: Color) -> Self {
         Material {
             color,
             kind: Kind::Emissive,
         }
     }
 
-    pub fn diffuse(color: LinSrgb) -> Self {
+    pub fn diffuse(color: Color) -> Self {
         Material::glossy(color, 1.0, 1.0)
     }
 
-    pub fn specular(color: LinSrgb) -> Self {
+    pub fn specular(color: Color) -> Self {
         Material::metallic(color, 1.5, 0.0)
     }
 
-    pub fn glossy(color: LinSrgb, index: f32, roughness: f32) -> Self {
+    pub fn glossy(color: Color, index: f32, roughness: f32) -> Self {
         Material {
             color,
             kind: Kind::GGX {
@@ -52,7 +77,7 @@ impl Material {
         }
     }
 
-    pub fn metallic(color: LinSrgb, index: f32, roughness: f32) -> Self {
+    pub fn metallic(color: Color, index: f32, roughness: f32) -> Self {
         Material {
             color,
             kind: Kind::GGX {
@@ -64,7 +89,7 @@ impl Material {
         }
     }
 
-    pub fn transparent(color: LinSrgb, index: f32, roughness: f32) -> Self {
+    pub fn transparent(color: Color, index: f32, roughness: f32) -> Self {
         Material {
             color,
             kind: Kind::GGX {
@@ -81,8 +106,9 @@ impl Material {
         tracer: &mut PathTracer<R>,
         int: &Intersection,
     ) -> LinSrgb {
+        let color = self.color.sample(int.texture_coords);
         match self.kind {
-            Kind::Emissive => self.color,
+            Kind::Emissive => color,
             Kind::GGX {
                 index,
                 roughness,
@@ -94,7 +120,7 @@ impl Material {
                 let microfacet =
                     sample_ggx(tracer.rng(), int.normal, roughness);
                 let f0 = if metallic {
-                    (self.color.red + self.color.green + self.color.blue) / 3.0
+                    (color.red + color.green + color.blue) / 3.0
                 } else {
                     ((1.0 - index) / (1.0 + index)).powi(2)
                 };
@@ -129,7 +155,7 @@ impl Material {
                     let geometry = 2.0 * n_dot_i * n_dot_o / (left + right);
 
                     // Cook-Torrance BRDF:
-                    self.color
+                    color
                         * weight
                         * geometry
                         * tracer.trace(Ray::new(int.position, outgoing))
@@ -174,7 +200,7 @@ impl Material {
                 } else {
                     // Diffuse: Lambert BRDF with cosine sampling.
                     let dir = sample_hemisphere(tracer.rng(), int.normal, 1.0);
-                    self.color * tracer.trace(Ray::new(int.position, dir))
+                    color * tracer.trace(Ray::new(int.position, dir))
                 }
             }
         }

@@ -10,12 +10,13 @@ use serde::Deserialize;
 
 use crate::bvh::BoundingVolumeHierarchy;
 use crate::camera::Camera;
-use crate::material::Material;
+use crate::material::{Color, Material};
 use crate::object::Object;
 use crate::profile;
 use crate::ray::Ray;
 use crate::scene::Scene;
 use crate::surface::*;
+use crate::texture::{Texture, TextureCoords};
 use crate::types::{Point3, Vector3};
 
 pub fn load_scene<P: AsRef<Path>>(path: P) -> Result<Scene, LoadError> {
@@ -115,11 +116,15 @@ impl ObjectPrototype {
             }
             SurfacePrototype::Triangle { vertices, material } => {
                 objects.push(Object::new(
-                    Triangle::new([
-                        vertices[0].into(),
-                        vertices[1].into(),
-                        vertices[2].into(),
-                    ]),
+                    Triangle::new(
+                        [
+                            vertices[0].into(),
+                            vertices[1].into(),
+                            vertices[2].into(),
+                        ],
+                        None,
+                        None,
+                    ),
                     material.into(),
                 ));
             }
@@ -128,9 +133,15 @@ impl ObjectPrototype {
                 let v1 = vertices[1].into();
                 let v2 = vertices[2].into();
                 let v3 = vertices[3].into();
-                let mat = material.into();
-                objects.push(Object::new(Triangle::new([v0, v1, v2]), mat));
-                objects.push(Object::new(Triangle::new([v0, v2, v3]), mat));
+                let mat: Material = material.into();
+                objects.push(Object::new(
+                    Triangle::new([v0, v1, v2], None, None),
+                    mat.clone(),
+                ));
+                objects.push(Object::new(
+                    Triangle::new([v0, v2, v3], None, None),
+                    mat,
+                ));
             }
             SurfacePrototype::Wavefront { obj_file } => {
                 for object in load_wavefront(&root.join(obj_file))? {
@@ -162,9 +173,15 @@ impl Into<Material> for MaterialPrototype {
     fn into(self) -> Material {
         let color = LinSrgb::from_components(self.color);
         match self.kind {
-            MaterialKindPrototype::Diffuse => Material::diffuse(color),
-            MaterialKindPrototype::Specular => Material::specular(color),
-            MaterialKindPrototype::Light => Material::light(color),
+            MaterialKindPrototype::Diffuse => {
+                Material::diffuse(Color::solid(color))
+            }
+            MaterialKindPrototype::Specular => {
+                Material::specular(Color::solid(color))
+            }
+            MaterialKindPrototype::Light => {
+                Material::light(Color::solid(color))
+            }
         }
     }
 }
@@ -173,9 +190,13 @@ fn load_wavefront(path: &Path) -> Result<Vec<Object>, LoadError> {
     let (models, raw_materials) =
         tobj::load_obj(path, /*triangulate_faces=*/ true)?;
 
-    let default_material = Material::diffuse(LinSrgb::new(1.0, 1.0, 1.0));
-    let materials: Vec<_> =
-        raw_materials.iter().map(|m| convert_material(m)).collect();
+    let root = path.parent().unwrap();
+    let default_material =
+        Material::diffuse(Color::solid(LinSrgb::new(1.0, 1.0, 1.0)));
+    let materials = raw_materials
+        .iter()
+        .map(|m| convert_material(root, m))
+        .collect::<Result<Vec<_>, _>>()?;
 
     let mut objects = Vec::new();
     for model in models.iter() {
@@ -188,14 +209,20 @@ fn load_wavefront(path: &Path) -> Result<Vec<Object>, LoadError> {
         for i in (0..mesh.indices.len()).step_by(3) {
             let v = |j| mesh_vertex(mesh, mesh.indices[j] as usize);
             let n = |j| mesh_normal(mesh, mesh.indices[j] as usize);
+            let t = |j| mesh_texture(mesh, mesh.indices[j] as usize);
             let vertices = [v(i), v(i + 1), v(i + 2)];
-            let surface = if mesh.normals.is_empty() {
-                Triangle::new(vertices)
+            let normals = if mesh.normals.is_empty() {
+                None
             } else {
-                let normals = [n(i), n(i + 1), n(i + 2)];
-                Triangle::with_normals(vertices, normals)
+                Some([n(i), n(i + 1), n(i + 2)])
             };
-            objects.push(Object::new(surface, *material));
+            let texture_coords = if mesh.texcoords.is_empty() {
+                None
+            } else {
+                Some([t(i), t(i + 1), t(i + 2)])
+            };
+            let surface = Triangle::new(vertices, normals, texture_coords);
+            objects.push(Object::new(surface, material.clone()));
         }
     }
     Ok(objects)
@@ -217,23 +244,47 @@ fn mesh_normal(mesh: &tobj::Mesh, i: usize) -> Vector3 {
     )
 }
 
-fn convert_material(m: &tobj::Material) -> Material {
+fn mesh_texture(mesh: &tobj::Mesh, i: usize) -> TextureCoords {
+    // Some obj files I've used seem to have incomplete texture coordinates, so
+    // let's validate each index to paint over that problem.
+    let x = mesh.texcoords.get(2 * i).cloned().unwrap_or(0.0);
+    let y = mesh.texcoords.get(2 * i + 1).cloned().unwrap_or(0.0);
+    TextureCoords::new(x, y)
+}
+
+fn convert_material(
+    root: &Path,
+    m: &tobj::Material,
+) -> Result<Material, LoadError> {
     let emissive = emissive_color(&m);
     if color_power(&emissive) > 0.0 {
-        return Material::light(to_color(&emissive));
+        return Ok(Material::light(to_color(&emissive)));
     }
 
     let roughness = (2.0 / (2.0 + m.shininess)).sqrt();
     if m.illumination_model == Some(7) {
-        Material::transparent(
+        Ok(Material::transparent(
             to_color(&m.specular),
             m.optical_density,
             roughness,
-        )
+        ))
+    } else if !m.diffuse_texture.is_empty() {
+        let texture_path = root.join(&m.diffuse_texture);
+        let img = image::open(texture_path)?.into_rgb8();
+        let color = Color::texture(Texture::from_image(img));
+        Ok(Material::glossy(color, m.optical_density, roughness))
     } else if color_power(&m.specular) > 5.0 * color_power(&m.diffuse) {
-        Material::metallic(to_color(&m.specular), m.optical_density, roughness)
+        Ok(Material::metallic(
+            to_color(&m.specular),
+            m.optical_density,
+            roughness,
+        ))
     } else {
-        Material::glossy(to_color(&m.diffuse), m.optical_density, roughness)
+        Ok(Material::glossy(
+            to_color(&m.diffuse),
+            m.optical_density,
+            roughness,
+        ))
     }
 }
 
@@ -256,8 +307,8 @@ fn parse_triple<T: Default + FromStr>(s: &str) -> Option<[T; 3]> {
     Some(result)
 }
 
-fn to_color(c: &[f32; 3]) -> LinSrgb {
-    LinSrgb::new(c[0], c[1], c[2])
+fn to_color(c: &[f32; 3]) -> Color {
+    Color::solid(LinSrgb::new(c[0], c[1], c[2]))
 }
 
 fn color_power(color: &[f32; 3]) -> f32 {
@@ -266,9 +317,16 @@ fn color_power(color: &[f32; 3]) -> f32 {
 
 #[derive(Debug)]
 pub enum LoadError {
+    ImageError(image::ImageError),
     Io(io::Error),
     Wavefront(tobj::LoadError),
     Yaml(serde_yaml::Error),
+}
+
+impl From<image::ImageError> for LoadError {
+    fn from(e: image::ImageError) -> Self {
+        LoadError::ImageError(e)
+    }
 }
 
 impl From<io::Error> for LoadError {
@@ -292,6 +350,7 @@ impl From<tobj::LoadError> for LoadError {
 impl fmt::Display for LoadError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
+            LoadError::ImageError(ref err) => write!(f, "Image error: {}", err),
             LoadError::Io(ref err) => write!(f, "IO error: {}", err),
             LoadError::Wavefront(ref err) => {
                 write!(f, "Wavefront error: {}", err)
@@ -304,6 +363,7 @@ impl fmt::Display for LoadError {
 impl error::Error for LoadError {
     fn cause(&self) -> Option<&dyn error::Error> {
         match *self {
+            LoadError::ImageError(ref err) => Some(err),
             LoadError::Io(ref err) => Some(err),
             LoadError::Wavefront(ref err) => Some(err),
             LoadError::Yaml(ref err) => Some(err),

@@ -12,5 +12,6 @@ pub mod render;
 pub mod scene;
 pub mod statistics;
 pub mod surface;
+pub mod texture;
 pub mod tracer;
 pub mod types;

@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use crate::bounds::BoundingBox;
 use crate::float;
 use crate::ray::Ray;
+use crate::texture::TextureCoords;
 use crate::types::{Point3, Vector3};
 use crate::{increment_statistic, statistics};
 
@@ -12,6 +13,7 @@ pub struct Intersection {
     pub position: Point3,
     pub incident: Vector3,
     pub normal: Vector3,
+    pub texture_coords: TextureCoords,
 }
 
 pub trait Surface: Debug + Sync {
@@ -66,6 +68,7 @@ impl Surface for Sphere {
                 position,
                 incident: ray.dir,
                 normal: (position - self.center).normalize(),
+                texture_coords: TextureCoords::default(),
             })
         }
     }
@@ -77,29 +80,26 @@ pub struct Triangle {
     edge1: Vector3,
     edge2: Vector3,
     normals: [Vector3; 3],
+    texture_coords: [TextureCoords; 3],
 }
 
 impl Triangle {
-    pub fn new(vertices: [Point3; 3]) -> Self {
+    pub fn new(
+        vertices: [Point3; 3],
+        normals: Option<[Vector3; 3]>,
+        texture_coords: Option<[TextureCoords; 3]>,
+    ) -> Self {
         let e1 = vertices[1] - vertices[0];
         let e2 = vertices[2] - vertices[0];
-        let n = e1.cross(e2).normalize();
-        Triangle {
-            vertex: vertices[0],
-            edge1: e1,
-            edge2: e2,
-            normals: [n, n, n],
-        }
-    }
-
-    pub fn with_normals(vertices: [Point3; 3], normals: [Vector3; 3]) -> Self {
-        let e1 = vertices[1] - vertices[0];
-        let e2 = vertices[2] - vertices[0];
+        let normals = normals.unwrap_or([e1.cross(e2).normalize(); 3]);
+        let texture_coords =
+            texture_coords.unwrap_or([TextureCoords::default(); 3]);
         Triangle {
             vertex: vertices[0],
             edge1: e1,
             edge2: e2,
             normals,
+            texture_coords,
         }
     }
 }
@@ -147,12 +147,16 @@ impl Surface for Triangle {
         let normal =
             (w * self.normals[0] + u * self.normals[1] + v * self.normals[2])
                 .normalize();
+        let texture_coords = w * self.texture_coords[0]
+            + u * self.texture_coords[1]
+            + v * self.texture_coords[2];
 
         Some(Intersection {
             distance,
             position: ray.along(distance),
             incident: ray.dir,
             normal,
+            texture_coords,
         })
     }
 }
