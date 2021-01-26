@@ -166,6 +166,7 @@ struct MaterialPrototype {
 enum MaterialKindPrototype {
     Diffuse,
     Specular,
+    Glossy { index: f32, roughness: f32 },
     Light,
 }
 
@@ -178,6 +179,9 @@ impl Into<Material> for MaterialPrototype {
             }
             MaterialKindPrototype::Specular => {
                 Material::specular(Color::solid(color))
+            }
+            MaterialKindPrototype::Glossy { index, roughness } => {
+                Material::glossy(Color::solid(color), index, roughness)
             }
             MaterialKindPrototype::Light => {
                 Material::light(Color::solid(color))
