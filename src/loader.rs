@@ -37,23 +37,6 @@ struct ScenePrototype {
     objects: Vec<ObjectPrototype>,
 }
 
-impl ScenePrototype {
-    fn compile(self, root: &Path) -> Result<Scene, LoadError> {
-        let mut objects = Vec::new();
-        for object in self.objects {
-            let new_objects: Result<Vec<Object>, LoadError> = object.load(root);
-            objects.extend(new_objects?.into_iter());
-        }
-        Ok(Scene {
-            camera: self.camera.into(),
-            global_illumination: LinSrgb::from_components(
-                self.global_illumination,
-            ),
-            objects: BoundingVolumeHierarchy::new(objects),
-        })
-    }
-}
-
 #[derive(Debug, Deserialize)]
 struct CameraPrototype {
     pos: (f32, f32, f32),
@@ -64,12 +47,6 @@ struct CameraPrototype {
 
 fn default_fov() -> u32 {
     60
-}
-
-impl Into<Camera> for CameraPrototype {
-    fn into(self) -> Camera {
-        Camera::new(Ray::new(self.pos.into(), self.dir.into()), self.fov)
-    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -98,6 +75,46 @@ enum SurfacePrototype {
     Wavefront {
         obj_file: String,
     },
+}
+
+#[derive(Debug, Deserialize)]
+struct MaterialPrototype {
+    #[serde(flatten)]
+    kind: MaterialKindPrototype,
+    color: (f32, f32, f32),
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "type")]
+#[serde(rename_all = "lowercase")]
+enum MaterialKindPrototype {
+    Diffuse,
+    Specular,
+    Glossy { index: f32, roughness: f32 },
+    Light,
+}
+
+impl ScenePrototype {
+    fn compile(self, root: &Path) -> Result<Scene, LoadError> {
+        let mut objects = Vec::new();
+        for object in self.objects {
+            let new_objects: Result<Vec<Object>, LoadError> = object.load(root);
+            objects.extend(new_objects?.into_iter());
+        }
+        Ok(Scene {
+            camera: self.camera.into(),
+            global_illumination: LinSrgb::from_components(
+                self.global_illumination,
+            ),
+            objects: BoundingVolumeHierarchy::new(objects),
+        })
+    }
+}
+
+impl Into<Camera> for CameraPrototype {
+    fn into(self) -> Camera {
+        Camera::new(Ray::new(self.pos.into(), self.dir.into()), self.fov)
+    }
 }
 
 impl ObjectPrototype {
@@ -151,23 +168,6 @@ impl ObjectPrototype {
         }
         Ok(objects)
     }
-}
-
-#[derive(Debug, Deserialize)]
-struct MaterialPrototype {
-    #[serde(flatten)]
-    kind: MaterialKindPrototype,
-    color: (f32, f32, f32),
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(tag = "type")]
-#[serde(rename_all = "lowercase")]
-enum MaterialKindPrototype {
-    Diffuse,
-    Specular,
-    Glossy { index: f32, roughness: f32 },
-    Light,
 }
 
 impl Into<Material> for MaterialPrototype {
