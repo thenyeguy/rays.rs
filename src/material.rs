@@ -18,7 +18,7 @@ pub enum Color {
 #[derive(Clone, Debug)]
 enum Kind {
     Emissive,
-    GGX {
+    Ggx {
         index: f32,
         roughness: f32,
         metallic: bool,
@@ -44,7 +44,7 @@ impl Color {
     fn sample(&self, coords: TextureCoords) -> LinSrgb {
         match self {
             Color::Solid(color) => *color,
-            Color::Texture(ref texture) => texture[coords],
+            Color::Texture(texture) => texture[coords],
         }
     }
 }
@@ -68,7 +68,7 @@ impl Material {
     pub fn glossy(color: Color, index: f32, roughness: f32) -> Self {
         Material {
             color,
-            kind: Kind::GGX {
+            kind: Kind::Ggx {
                 index,
                 roughness,
                 metallic: false,
@@ -80,7 +80,7 @@ impl Material {
     pub fn metallic(color: Color, index: f32, roughness: f32) -> Self {
         Material {
             color,
-            kind: Kind::GGX {
+            kind: Kind::Ggx {
                 index,
                 roughness,
                 metallic: true,
@@ -92,7 +92,7 @@ impl Material {
     pub fn transparent(color: Color, index: f32, roughness: f32) -> Self {
         Material {
             color,
-            kind: Kind::GGX {
+            kind: Kind::Ggx {
                 index,
                 roughness,
                 metallic: false,
@@ -109,7 +109,7 @@ impl Material {
         let color = self.color.sample(int.texture_coords);
         match self.kind {
             Kind::Emissive => color,
-            Kind::GGX {
+            Kind::Ggx {
                 index,
                 roughness,
                 metallic,

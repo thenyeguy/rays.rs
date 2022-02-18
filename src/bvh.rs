@@ -39,7 +39,7 @@ impl BvhNode {
             let bb = objects
                 .iter()
                 .map(|(bb, _obj)| bb)
-                .fold(BoundingBox::empty(), |ref left, ref right| {
+                .fold(BoundingBox::empty(), |ref left, right| {
                     BoundingBox::union(left, right)
                 });
             let (left, right) = partition(objects);
@@ -48,8 +48,8 @@ impl BvhNode {
     }
 
     fn sample(&self, ray: Ray) -> Option<Sample> {
-        match *self {
-            BvhNode::Node(ref bb, ref left, ref right) => {
+        match self {
+            BvhNode::Node(bb, left, right) => {
                 if bb.intersects(ray) {
                     let left = left.sample(ray);
                     let right = right.sample(ray);
@@ -71,7 +71,7 @@ impl BvhNode {
                     None
                 }
             }
-            BvhNode::Leaf(ref obj) => obj.sample(ray),
+            BvhNode::Leaf(obj) => obj.sample(ray),
         }
     }
 }
@@ -129,7 +129,7 @@ fn partition(
             let relative_pos = bb.centroid()[axis] - axis_min;
             let bin = (relative_pos / bin_size - float::EPSILON) as usize;
             assignments.push(bin);
-            bins[bin].bb.merge(&bb);
+            bins[bin].bb.merge(bb);
             bins[bin].count += 1;
         }
 

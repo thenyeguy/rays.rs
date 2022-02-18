@@ -40,7 +40,7 @@ impl Renderer {
                             let ray = scene.camera.get_ray(xnorm, ynorm);
 
                             let mut tracer = PathTracer::new(
-                                &scene,
+                                scene,
                                 &mut rng,
                                 self.max_reflections,
                             );

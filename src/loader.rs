@@ -111,9 +111,12 @@ impl ScenePrototype {
     }
 }
 
-impl Into<Camera> for CameraPrototype {
-    fn into(self) -> Camera {
-        Camera::new(Ray::new(self.pos.into(), self.dir.into()), self.fov)
+impl From<CameraPrototype> for Camera {
+    fn from(prototype: CameraPrototype) -> Camera {
+        Camera::new(
+            Ray::new(prototype.pos.into(), prototype.dir.into()),
+            prototype.fov,
+        )
     }
 }
 
@@ -170,10 +173,10 @@ impl ObjectPrototype {
     }
 }
 
-impl Into<Material> for MaterialPrototype {
-    fn into(self) -> Material {
-        let color = LinSrgb::from_components(self.color);
-        match self.kind {
+impl From<MaterialPrototype> for Material {
+    fn from(prototype: MaterialPrototype) -> Material {
+        let color = LinSrgb::from_components(prototype.color);
+        match prototype.kind {
             MaterialKindPrototype::Diffuse => {
                 Material::diffuse(Color::solid(color))
             }
@@ -268,7 +271,7 @@ fn convert_material(
     root: &Path,
     m: &tobj::Material,
 ) -> Result<Material, LoadError> {
-    let emissive = emissive_color(&m);
+    let emissive = emissive_color(m);
     if color_power(&emissive) > 0.0 {
         return Ok(Material::light(to_color(&emissive)));
     }
@@ -361,24 +364,24 @@ impl From<tobj::LoadError> for LoadError {
 
 impl fmt::Display for LoadError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            LoadError::ImageError(ref err) => write!(f, "Image error: {}", err),
-            LoadError::Io(ref err) => write!(f, "IO error: {}", err),
-            LoadError::Wavefront(ref err) => {
+        match self {
+            LoadError::ImageError(err) => write!(f, "Image error: {}", err),
+            LoadError::Io(err) => write!(f, "IO error: {}", err),
+            LoadError::Wavefront(err) => {
                 write!(f, "Wavefront error: {}", err)
             }
-            LoadError::Yaml(ref err) => write!(f, "Yaml error: {}", err),
+            LoadError::Yaml(err) => write!(f, "Yaml error: {}", err),
         }
     }
 }
 
 impl error::Error for LoadError {
     fn cause(&self) -> Option<&dyn error::Error> {
-        match *self {
-            LoadError::ImageError(ref err) => Some(err),
-            LoadError::Io(ref err) => Some(err),
-            LoadError::Wavefront(ref err) => Some(err),
-            LoadError::Yaml(ref err) => Some(err),
+        match self {
+            LoadError::ImageError(err) => Some(err),
+            LoadError::Io(err) => Some(err),
+            LoadError::Wavefront(err) => Some(err),
+            LoadError::Yaml(err) => Some(err),
         }
     }
 }
