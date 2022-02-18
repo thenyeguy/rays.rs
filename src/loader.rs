@@ -1,5 +1,3 @@
-use std::error;
-use std::fmt::{self, Debug};
 use std::fs::File;
 use std::io;
 use std::path::Path;
@@ -330,58 +328,14 @@ fn color_power(color: &[f32; 3]) -> f32 {
     color[0].powi(2) + color[1].powi(2) + color[2].powi(2)
 }
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum LoadError {
-    ImageError(image::ImageError),
-    Io(io::Error),
-    Wavefront(tobj::LoadError),
-    Yaml(serde_yaml::Error),
-}
-
-impl From<image::ImageError> for LoadError {
-    fn from(e: image::ImageError) -> Self {
-        LoadError::ImageError(e)
-    }
-}
-
-impl From<io::Error> for LoadError {
-    fn from(e: io::Error) -> Self {
-        LoadError::Io(e)
-    }
-}
-
-impl From<serde_yaml::Error> for LoadError {
-    fn from(e: serde_yaml::Error) -> Self {
-        LoadError::Yaml(e)
-    }
-}
-
-impl From<tobj::LoadError> for LoadError {
-    fn from(e: tobj::LoadError) -> Self {
-        LoadError::Wavefront(e)
-    }
-}
-
-impl fmt::Display for LoadError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            LoadError::ImageError(err) => write!(f, "Image error: {}", err),
-            LoadError::Io(err) => write!(f, "IO error: {}", err),
-            LoadError::Wavefront(err) => {
-                write!(f, "Wavefront error: {}", err)
-            }
-            LoadError::Yaml(err) => write!(f, "Yaml error: {}", err),
-        }
-    }
-}
-
-impl error::Error for LoadError {
-    fn cause(&self) -> Option<&dyn error::Error> {
-        match self {
-            LoadError::ImageError(err) => Some(err),
-            LoadError::Io(err) => Some(err),
-            LoadError::Wavefront(err) => Some(err),
-            LoadError::Yaml(err) => Some(err),
-        }
-    }
+    #[error("image error: {0}")]
+    ImageError(#[from] image::ImageError),
+    #[error("io error: {0}")]
+    Io(#[from] io::Error),
+    #[error("obj error: {0}")]
+    Wavefront(#[from] tobj::LoadError),
+    #[error("yaml error: {0}")]
+    Yaml(#[from] serde_yaml::Error),
 }
