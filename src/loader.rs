@@ -191,13 +191,21 @@ impl Into<Material> for MaterialPrototype {
 }
 
 fn load_wavefront(path: &Path) -> Result<Vec<Object>, LoadError> {
-    let (models, raw_materials) =
-        tobj::load_obj(path, /*triangulate_faces=*/ true)?;
+    let (models, raw_materials) = tobj::load_obj(
+        path,
+        &tobj::LoadOptions {
+            single_index: true,
+            triangulate: true,
+            ignore_points: true,
+            ignore_lines: true,
+            ..Default::default()
+        },
+    )?;
 
     let root = path.parent().unwrap();
     let default_material =
         Material::diffuse(Color::solid(LinSrgb::new(1.0, 1.0, 1.0)));
-    let materials = raw_materials
+    let materials = raw_materials?
         .iter()
         .map(|m| convert_material(root, m))
         .collect::<Result<Vec<_>, _>>()?;

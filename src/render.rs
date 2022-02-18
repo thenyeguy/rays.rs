@@ -1,4 +1,4 @@
-use palette::{self, Limited, Pixel};
+use palette::{self, Clamp, Pixel};
 use rand::{Rng, SeedableRng};
 use rayon::prelude::*;
 use std::f32;
