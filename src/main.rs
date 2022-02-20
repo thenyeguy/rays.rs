@@ -7,13 +7,16 @@ struct LoadProgress(ProgressBar);
 
 impl LoadProgress {
     fn new() -> Self {
-        let bar = ProgressBar::new_spinner().with_style(
-            ProgressStyle::default_spinner()
-                .tick_strings(&["", ".", "..", "...", ""])
-                .template(" {prefix:.cyan.bold} {msg}{spinner}"),
-        );
-        bar.set_prefix("[1/3]");
-        bar.set_message("Loading scene");
+        let bar = ProgressBar::new_spinner()
+            .with_prefix("[1/3]")
+            .with_message("Loading scene")
+            .with_style(
+                ProgressStyle::default_spinner()
+                    .tick_strings(&["   ", ".  ", ".. ", "...", "   "])
+                    .template(
+                        " {prefix:.cyan.bold} {msg}{spinner} ({elapsed_precise})"
+                    ),
+            );
         bar.enable_steady_tick(500 /*ms*/);
         LoadProgress(bar)
     }
@@ -23,7 +26,7 @@ impl Drop for LoadProgress {
     fn drop(&mut self) {
         self.0.set_style(
             ProgressStyle::default_spinner()
-                .template(" {prefix:.green.bold} {msg}"),
+                .template(" {prefix:.green.bold} {msg} ({elapsed_precise})"),
         );
         self.0.finish_with_message("Load complete");
     }
@@ -33,17 +36,18 @@ struct RenderProgress(ProgressBar);
 
 impl RenderProgress {
     fn new(image_width: u32) -> Self {
-        let bar = ProgressBar::new(image_width as u64).with_style(
-            ProgressStyle::default_bar()
-                .template(concat!(
-                    " {prefix:.cyan.bold} {msg}",
-                    "   {bar:50.dim/black.bright}",
-                    "   {percent}% ({elapsed_precise}) "
-                ))
-                .progress_chars("━╾╶"),
-        );
-        bar.set_prefix("[2/3]");
-        bar.set_message("Rendering image");
+        let bar = ProgressBar::new(image_width as u64)
+            .with_prefix("[2/3]")
+            .with_message("Rendering image")
+            .with_style(
+                ProgressStyle::default_bar()
+                    .template(concat!(
+                        " {prefix:.cyan.bold} {msg}",
+                        "   {bar:50.dim/black.bright}",
+                        "   {percent}% ({elapsed_precise}) "
+                    ))
+                    .progress_chars("━╾╶"),
+            );
         bar.enable_steady_tick(100 /*ms*/);
         RenderProgress(bar)
     }
