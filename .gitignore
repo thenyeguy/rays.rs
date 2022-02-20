@@ -1,4 +1,7 @@
 Cargo.lock
+*.svg
+*.prof
+*.pdf
 images/
 scenes/
 target/
