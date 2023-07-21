@@ -9,15 +9,15 @@ profile = ["cpuprofiler"]
 statistics = []
 
 [dependencies]
-console = "0.15.0"
+console = "0.15.7"
 cpuprofiler = { version = "0.0.4", optional = true }
-image = "0.24.0"
-indicatif = "0.16.2"
-palette = "0.6.0"
-rand = { version = "0.8.0", features = ["small_rng"] }
-rayon = "1.5.0"
-serde = { version = "1.0.118", features = ["derive"] }
-serde_yaml = "0.8.14"
+image = "0.24.6"
+indicatif = "0.17.5"
+palette = "0.7.2"
+rand = { version = "0.8.5", features = ["small_rng"] }
+rayon = "1.7.0"
+serde = { version = "1.0.173", features = ["derive"] }
+serde_yaml = "0.9.25"
 structopt = "0.3"
 thiserror = "1.0"
-tobj = "3.2.0"
+tobj = "4.0.0"

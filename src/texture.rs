@@ -1,4 +1,4 @@
-use palette::{LinSrgb, Pixel, Srgb};
+use palette::{LinSrgb, Srgb};
 use std::fmt::Debug;
 use std::ops::{Add, Index, Mul};
 
@@ -47,7 +47,7 @@ impl Texture {
         let height = img.height() as usize;
         let pixels = img
             .pixels()
-            .map(|image::Rgb(p)| Srgb::from_raw(p).into_format().into_linear())
+            .map(|image::Rgb(p)| Srgb::from(*p).into_linear())
             .collect();
         Texture {
             width,

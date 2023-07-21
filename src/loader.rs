@@ -253,28 +253,35 @@ fn convert_material(root: &Path, m: &tobj::Material) -> Result<Material, LoadErr
         return Ok(Material::light(to_color(&emissive)));
     }
 
-    let roughness = (2.0 / (2.0 + m.shininess)).sqrt();
+    let specular = m.specular.unwrap_or_default();
+    let diffuse = m.diffuse.unwrap_or_default();
+
+    let roughness = (2.0 / (2.0 + m.shininess.unwrap_or(0.0))).sqrt();
     if m.illumination_model == Some(7) {
         Ok(Material::transparent(
-            to_color(&m.specular),
-            m.optical_density,
+            to_color(&m.specular.unwrap_or_default()),
+            m.optical_density.unwrap_or(1.0),
             roughness,
         ))
-    } else if !m.diffuse_texture.is_empty() {
-        let texture_path = root.join(&m.diffuse_texture);
+    } else if let Some(ref texture) = m.diffuse_texture {
+        let texture_path = root.join(texture);
         let img = image::open(texture_path)?.into_rgb8();
         let color = Color::texture(Texture::from_image(img));
-        Ok(Material::glossy(color, m.optical_density, roughness))
-    } else if color_power(&m.specular) > 5.0 * color_power(&m.diffuse) {
+        Ok(Material::glossy(
+            color,
+            m.optical_density.unwrap_or(1.0),
+            roughness,
+        ))
+    } else if color_power(&specular) > 5.0 * color_power(&diffuse) {
         Ok(Material::metallic(
-            to_color(&m.specular),
-            m.optical_density,
+            to_color(&specular),
+            m.optical_density.unwrap_or(1.0),
             roughness,
         ))
     } else {
         Ok(Material::glossy(
-            to_color(&m.diffuse),
-            m.optical_density,
+            to_color(&diffuse),
+            m.optical_density.unwrap_or(1.0),
             roughness,
         ))
     }

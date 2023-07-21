@@ -1,4 +1,4 @@
-use palette::{self, Clamp, Pixel};
+use palette::{self, Clamp};
 use rand::{Rng, SeedableRng};
 use rayon::prelude::*;
 use std::f32;
@@ -42,7 +42,7 @@ impl Renderer {
                             color += tracer.trace(ray);
                         }
                         color = (color / self.samples_per_pixel as f32).clamp();
-                        palette::Srgb::from_linear(color).into_format().into_raw()
+                        palette::Srgb::from_linear(color).into()
                     })
                     .collect();
                 on_col_done();

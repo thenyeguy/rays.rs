@@ -1,6 +1,7 @@
 use console::style;
 use indicatif::{ProgressBar, ProgressStyle};
 use rays::prelude::*;
+use std::time::Duration;
 use structopt::StructOpt;
 
 struct LoadProgress(ProgressBar);
@@ -13,9 +14,10 @@ impl LoadProgress {
             .with_style(
                 ProgressStyle::default_spinner()
                     .tick_strings(&["   ", ".  ", ".. ", "...", "   "])
-                    .template(" {prefix:.cyan.bold} {msg}{spinner} ({elapsed_precise})"),
+                    .template(" {prefix:.cyan.bold} {msg}{spinner} ({elapsed_precise})")
+                    .unwrap(),
             );
-        bar.enable_steady_tick(500 /*ms*/);
+        bar.enable_steady_tick(Duration::from_millis(500));
         LoadProgress(bar)
     }
 }
@@ -24,7 +26,8 @@ impl Drop for LoadProgress {
     fn drop(&mut self) {
         self.0.set_style(
             ProgressStyle::default_spinner()
-                .template(" {prefix:.green.bold} {msg} ({elapsed_precise})"),
+                .template(" {prefix:.green.bold} {msg} ({elapsed_precise})")
+                .unwrap(),
         );
         self.0.finish_with_message("Load complete");
     }
@@ -39,14 +42,15 @@ impl RenderProgress {
             .with_message("Rendering image")
             .with_style(
                 ProgressStyle::default_bar()
+                    .progress_chars("━╾╶")
                     .template(concat!(
                         " {prefix:.cyan.bold} {msg}",
                         "   {bar:50.dim/black.bright}",
                         "   {percent}% ({elapsed_precise}) "
                     ))
-                    .progress_chars("━╾╶"),
+                    .unwrap(),
             );
-        bar.enable_steady_tick(100 /*ms*/);
+        bar.enable_steady_tick(Duration::from_millis(100));
         RenderProgress(bar)
     }
 
@@ -59,7 +63,8 @@ impl Drop for RenderProgress {
     fn drop(&mut self) {
         self.0.set_style(
             ProgressStyle::default_bar()
-                .template(" {prefix:.green.bold} {msg} ({elapsed_precise})"),
+                .template(" {prefix:.green.bold} {msg} ({elapsed_precise})")
+                .unwrap(),
         );
         self.0.finish_with_message("Render complete");
     }
