@@ -55,9 +55,7 @@ impl BvhNode {
                     let right = right.sample(ray);
                     match (left, right) {
                         (Some(lc), Some(rc)) => {
-                            if lc.intersection.distance
-                                < rc.intersection.distance
-                            {
+                            if lc.intersection.distance < rc.intersection.distance {
                                 Some(lc)
                             } else {
                                 Some(rc)

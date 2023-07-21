@@ -13,9 +13,7 @@ impl LoadProgress {
             .with_style(
                 ProgressStyle::default_spinner()
                     .tick_strings(&["   ", ".  ", ".. ", "...", "   "])
-                    .template(
-                        " {prefix:.cyan.bold} {msg}{spinner} ({elapsed_precise})"
-                    ),
+                    .template(" {prefix:.cyan.bold} {msg}{spinner} ({elapsed_precise})"),
             );
         bar.enable_steady_tick(500 /*ms*/);
         LoadProgress(bar)

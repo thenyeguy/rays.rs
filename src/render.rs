@@ -26,7 +26,6 @@ impl Renderer {
             .map(|i| {
                 let mut rng = rand::rngs::SmallRng::from_entropy();
                 let col = (0..self.height)
-                    .into_iter()
                     .map(|j| {
                         let x = i as f32 - (self.width / 2) as f32;
                         let y = (self.height / 2) as f32 - j as f32;
@@ -39,17 +38,11 @@ impl Renderer {
                             let ynorm = (y + dy) / self.width as f32;
                             let ray = scene.camera.get_ray(xnorm, ynorm);
 
-                            let mut tracer = PathTracer::new(
-                                scene,
-                                &mut rng,
-                                self.max_reflections,
-                            );
+                            let mut tracer = PathTracer::new(scene, &mut rng, self.max_reflections);
                             color += tracer.trace(ray);
                         }
                         color = (color / self.samples_per_pixel as f32).clamp();
-                        palette::Srgb::from_linear(color)
-                            .into_format()
-                            .into_raw()
+                        palette::Srgb::from_linear(color).into_format().into_raw()
                     })
                     .collect();
                 on_col_done();
@@ -61,11 +54,7 @@ impl Renderer {
         let mut image = image::ImageBuffer::new(self.width, self.height);
         for i in 0..self.width {
             for j in 0..self.height {
-                image.put_pixel(
-                    i,
-                    j,
-                    image::Rgb(pixels[i as usize][j as usize]),
-                );
+                image.put_pixel(i, j, image::Rgb(pixels[i as usize][j as usize]));
             }
         }
         image

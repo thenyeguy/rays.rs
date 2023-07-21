@@ -117,8 +117,7 @@ impl Material {
             } => {
                 // Importance sample a GGX microfacet, then estimate the Fresnel
                 // coefficient.
-                let microfacet =
-                    sample_ggx(tracer.rng(), int.normal, roughness);
+                let microfacet = sample_ggx(tracer.rng(), int.normal, roughness);
                 let f0 = if metallic {
                     (color.red + color.green + color.blue) / 3.0
                 } else {
@@ -148,17 +147,12 @@ impl Material {
 
                     // Smith correlated shadow masking function:
                     let r2 = roughness.powi(2);
-                    let left =
-                        n_dot_i * (r2 + (1.0 - r2) * n_dot_o.powi(2)).sqrt();
-                    let right =
-                        n_dot_o * (r2 + (1.0 - r2) * n_dot_i.powi(2)).sqrt();
+                    let left = n_dot_i * (r2 + (1.0 - r2) * n_dot_o.powi(2)).sqrt();
+                    let right = n_dot_o * (r2 + (1.0 - r2) * n_dot_i.powi(2)).sqrt();
                     let geometry = 2.0 * n_dot_i * n_dot_o / (left + right);
 
                     // Cook-Torrance BRDF:
-                    color
-                        * weight
-                        * geometry
-                        * tracer.trace(Ray::new(int.position, outgoing))
+                    color * weight * geometry * tracer.trace(Ray::new(int.position, outgoing))
                 } else if transparent {
                     // Refraction:
                     let (ni, no) = if int.normal.dot(int.incident) < 0.0 {
@@ -166,12 +160,11 @@ impl Material {
                     } else {
                         (index, 1.0)
                     };
-                    let outgoing =
-                        match microfacet.refract(int.incident, ni / no) {
-                            Some(o) => o,
-                            // Total internal reflection.
-                            None => return LinSrgb::default(),
-                        };
+                    let outgoing = match microfacet.refract(int.incident, ni / no) {
+                        Some(o) => o,
+                        // Total internal reflection.
+                        None => return LinSrgb::default(),
+                    };
 
                     // Calculate the weight of this ray, including parts of the
                     // distribution function that weren't part of the importance
@@ -184,16 +177,12 @@ impl Material {
                     let r2 = roughness.powi(2);
                     let n_dot_o = int.normal.dot(outgoing).abs();
                     let n_dot_i = int.normal.dot(int.incident).abs();
-                    let left =
-                        n_dot_i * (r2 + (1.0 - r2) * n_dot_o.powi(2)).sqrt();
-                    let right =
-                        n_dot_o * (r2 + (1.0 - r2) * n_dot_i.powi(2)).sqrt();
+                    let left = n_dot_i * (r2 + (1.0 - r2) * n_dot_o.powi(2)).sqrt();
+                    let right = n_dot_o * (r2 + (1.0 - r2) * n_dot_i.powi(2)).sqrt();
                     let geometry = 2.0 * n_dot_i * n_dot_o / (left + right);
 
                     // Cook-Torrance BRDF:
-                    tracer.trace(Ray::new(int.position, outgoing))
-                        * weight
-                        * geometry
+                    tracer.trace(Ray::new(int.position, outgoing)) * weight * geometry
                 } else if metallic {
                     // Absorb the light.
                     LinSrgb::default()
@@ -207,11 +196,7 @@ impl Material {
     }
 }
 
-fn sample_hemisphere<R: Rng + ?Sized>(
-    rng: &mut R,
-    normal: Vector3,
-    alpha: f32,
-) -> Vector3 {
+fn sample_hemisphere<R: Rng + ?Sized>(rng: &mut R, normal: Vector3, alpha: f32) -> Vector3 {
     // Sample a hemisphere, then project about the normal vector.
     let z = rng.gen::<f32>().powf(1.0 / (alpha + 1.0));
     let zp = (1.0 - z * z).sqrt();
@@ -219,11 +204,7 @@ fn sample_hemisphere<R: Rng + ?Sized>(
     normal.tangent_space() * Vector3::new(zp * theta.cos(), zp * theta.sin(), z)
 }
 
-fn sample_ggx<R: Rng + ?Sized>(
-    rng: &mut R,
-    normal: Vector3,
-    roughness: f32,
-) -> Vector3 {
+fn sample_ggx<R: Rng + ?Sized>(rng: &mut R, normal: Vector3, roughness: f32) -> Vector3 {
     let e = rng.gen::<f32>();
     let theta = (roughness * e.sqrt() / (1.0 - e).sqrt()).atan();
     let phi = rng.gen::<f32>() * 2.0 * PI;

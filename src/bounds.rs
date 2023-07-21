@@ -12,11 +12,7 @@ pub struct BoundingBox {
 impl BoundingBox {
     pub fn empty() -> Self {
         BoundingBox {
-            min: Point3::new(
-                std::f32::INFINITY,
-                std::f32::INFINITY,
-                std::f32::INFINITY,
-            ),
+            min: Point3::new(std::f32::INFINITY, std::f32::INFINITY, std::f32::INFINITY),
             max: Point3::new(
                 std::f32::NEG_INFINITY,
                 std::f32::NEG_INFINITY,
@@ -25,14 +21,7 @@ impl BoundingBox {
         }
     }
 
-    pub fn axis_aligned(
-        xmin: f32,
-        xmax: f32,
-        ymin: f32,
-        ymax: f32,
-        zmin: f32,
-        zmax: f32,
-    ) -> Self {
+    pub fn axis_aligned(xmin: f32, xmax: f32, ymin: f32, ymax: f32, zmin: f32, zmax: f32) -> Self {
         BoundingBox {
             min: Point3::new(xmin, ymin, zmin),
             max: Point3::new(xmax, ymax, zmax),

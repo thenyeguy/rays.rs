@@ -48,8 +48,7 @@ impl Surface for Sphere {
     fn intersect(&self, ray: Ray) -> Option<Intersection> {
         // Find the discriminant
         let b = (ray.origin - self.center).dot(ray.dir) * 2.0;
-        let c = (ray.origin - self.center).norm_squared()
-            - self.radius * self.radius;
+        let c = (ray.origin - self.center).norm_squared() - self.radius * self.radius;
         let dis = b * b - 4.0 * c;
 
         // If the discriminant is negative, then no intersection exists.
@@ -92,8 +91,7 @@ impl Triangle {
         let e1 = vertices[1] - vertices[0];
         let e2 = vertices[2] - vertices[0];
         let normals = normals.unwrap_or([e1.cross(e2).normalize(); 3]);
-        let texture_coords =
-            texture_coords.unwrap_or([TextureCoords::default(); 3]);
+        let texture_coords = texture_coords.unwrap_or([TextureCoords::default(); 3]);
         Triangle {
             vertex: vertices[0],
             edge1: e1,
@@ -144,12 +142,9 @@ impl Surface for Triangle {
         }
 
         let w = 1.0 - u - v;
-        let normal =
-            (w * self.normals[0] + u * self.normals[1] + v * self.normals[2])
-                .normalize();
-        let texture_coords = w * self.texture_coords[0]
-            + u * self.texture_coords[1]
-            + v * self.texture_coords[2];
+        let normal = (w * self.normals[0] + u * self.normals[1] + v * self.normals[2]).normalize();
+        let texture_coords =
+            w * self.texture_coords[0] + u * self.texture_coords[1] + v * self.texture_coords[2];
 
         Some(Intersection {
             distance,

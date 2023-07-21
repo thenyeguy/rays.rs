@@ -101,9 +101,7 @@ impl ScenePrototype {
         }
         Ok(Scene {
             camera: self.camera.into(),
-            global_illumination: LinSrgb::from_components(
-                self.global_illumination,
-            ),
+            global_illumination: LinSrgb::from_components(self.global_illumination),
             objects: BoundingVolumeHierarchy::new(objects),
         })
     }
@@ -135,11 +133,7 @@ impl ObjectPrototype {
             SurfacePrototype::Triangle { vertices, material } => {
                 objects.push(Object::new(
                     Triangle::new(
-                        [
-                            vertices[0].into(),
-                            vertices[1].into(),
-                            vertices[2].into(),
-                        ],
+                        [vertices[0].into(), vertices[1].into(), vertices[2].into()],
                         None,
                         None,
                     ),
@@ -156,10 +150,7 @@ impl ObjectPrototype {
                     Triangle::new([v0, v1, v2], None, None),
                     mat.clone(),
                 ));
-                objects.push(Object::new(
-                    Triangle::new([v0, v2, v3], None, None),
-                    mat,
-                ));
+                objects.push(Object::new(Triangle::new([v0, v2, v3], None, None), mat));
             }
             SurfacePrototype::Wavefront { obj_file } => {
                 for object in load_wavefront(&root.join(obj_file))? {
@@ -175,18 +166,12 @@ impl From<MaterialPrototype> for Material {
     fn from(prototype: MaterialPrototype) -> Material {
         let color = LinSrgb::from_components(prototype.color);
         match prototype.kind {
-            MaterialKindPrototype::Diffuse => {
-                Material::diffuse(Color::solid(color))
-            }
-            MaterialKindPrototype::Specular => {
-                Material::specular(Color::solid(color))
-            }
+            MaterialKindPrototype::Diffuse => Material::diffuse(Color::solid(color)),
+            MaterialKindPrototype::Specular => Material::specular(Color::solid(color)),
             MaterialKindPrototype::Glossy { index, roughness } => {
                 Material::glossy(Color::solid(color), index, roughness)
             }
-            MaterialKindPrototype::Light => {
-                Material::light(Color::solid(color))
-            }
+            MaterialKindPrototype::Light => Material::light(Color::solid(color)),
         }
     }
 }
@@ -199,13 +184,11 @@ fn load_wavefront(path: &Path) -> Result<Vec<Object>, LoadError> {
             triangulate: true,
             ignore_points: true,
             ignore_lines: true,
-            ..Default::default()
         },
     )?;
 
     let root = path.parent().unwrap();
-    let default_material =
-        Material::diffuse(Color::solid(LinSrgb::new(1.0, 1.0, 1.0)));
+    let default_material = Material::diffuse(Color::solid(LinSrgb::new(1.0, 1.0, 1.0)));
     let materials = raw_materials?
         .iter()
         .map(|m| convert_material(root, m))
@@ -216,8 +199,7 @@ fn load_wavefront(path: &Path) -> Result<Vec<Object>, LoadError> {
         let mesh = &model.mesh;
         let material = mesh
             .material_id
-            .map(|idx| materials.get(idx))
-            .flatten()
+            .and_then(|idx| materials.get(idx))
             .unwrap_or(&default_material);
         for i in (0..mesh.indices.len()).step_by(3) {
             let v = |j| mesh_vertex(mesh, mesh.indices[j] as usize);
@@ -265,10 +247,7 @@ fn mesh_texture(mesh: &tobj::Mesh, i: usize) -> TextureCoords {
     TextureCoords::new(x, y)
 }
 
-fn convert_material(
-    root: &Path,
-    m: &tobj::Material,
-) -> Result<Material, LoadError> {
+fn convert_material(root: &Path, m: &tobj::Material) -> Result<Material, LoadError> {
     let emissive = emissive_color(m);
     if color_power(&emissive) > 0.0 {
         return Ok(Material::light(to_color(&emissive)));
