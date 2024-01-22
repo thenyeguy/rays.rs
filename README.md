@@ -8,6 +8,10 @@ A Monte-Carlo Path Tracer in Rust. Features include:
 * Scene loader for `.obj` and `.mat` files.
 * Optional integrated profiling and statistics counting.
 
+Example renders can be found [inside `assets`](./assets):
+
+<img src="assets/breakfast_room.png" width="50%" height="50%">
+
 ## Reference
 
 * [Microfacet Models for Refraction through Rough Surfaces](http://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf)
